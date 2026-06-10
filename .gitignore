@@ -4,3 +4,11 @@
 .DS_Store
 TACQ/.env
 TACQ/tacq_venv/
+
+# scratch-incident hardening (2026-06-10)
+core_nid*
+core.*
+*.pt
+llama31_venv/
+recovery/pycdc/
+recovery/pyc/TACQ/
