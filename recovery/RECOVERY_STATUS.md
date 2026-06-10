@@ -71,24 +71,29 @@ Decompiled, need hand-cleanup (botched `with`/comprehensions/decorators):
   `recovery/pyc/scripts/__pycache__/extract_tacq_baseline.cpython-311.pyc`
   (retry with `pylingual`/newer pycdc, or rebuild from `tacq_native_*` logs).
 
-## LOST — no bytecode (must rebuild from logs + memory)
+## REBUILT from logs + surviving TACQ code (round 2) — VERIFY with a smoke run
 
-`.sh` wrappers are not compiled, so only logs + my partial memory remain. The
-result logs contain the exact args, so these are reproducible with care:
+`.sh` wrappers have no bytecode, so these were rebuilt from the log step markers,
+the surviving canonical pipeline `TACQ/scripts/examples/evaluate_llama3_8b.sh`, the
+surviving eval modules, and this session's memory. All pass `bash -n`.
 
-- `scripts/run_tdso_v2_task_conditioned_llama31.sh`
-- `scripts/run_tacq_task_conditioned_llama31.sh`
-- `scripts/run_task_conditioned_parallel_llama31.sh`
-- `scripts/run_tdso_task_sequential_llama31.sh`
-- `scripts/run_downstream_seed_llama31.sh`
-- `scripts/run_downstream_firm_resume.sh`
-- `scripts/run_fixed_mask_bitwidth_ablation.sh`
-- `scripts/run_saliency_source_ablation.sh`
-- `scripts/pretrain_eval_helpers.sh`
-- `scripts/sbatch_saliency_source_ablation.sh`
-- `scripts/sbatch_saliency_dictfree.sh`
-- `scripts/sbatch_downstream_firm_resume.sh`
-- `scripts/sbatch_downstream_firm_3bit_resume.sh`
+- `scripts/pretrain_eval_helpers.sh` — **HIGH**: every primitive pinned to surviving
+  `TACQ/datasets_directory/{GSM8k,MMLU,Spider}` eval modules + the `RESULT` log format.
+- `scripts/run_tacq_task_conditioned_llama31.sh` — adapted from the canonical TaCQ example.
+- `scripts/run_tdso_v2_task_conditioned_llama31.sh` — extract→convert→masked gptq→eval.
+- `scripts/run_tdso_task_sequential_llama31.sh`, `run_task_conditioned_parallel_llama31.sh`.
+- `scripts/run_downstream_seed_llama31.sh`, `run_downstream_firm_resume.sh` (phases 0-3).
+- `scripts/run_fixed_mask_bitwidth_ablation.sh` — **LOWEST** confidence (no bytecode,
+  session-authored); verify ablation semantics vs `fixed_mask_*.log`.
+- `scripts/run_saliency_source_ablation.sh` — two-phase (seq heavy / parallel dumb).
+- `scripts/sbatch_{downstream_firm_resume,downstream_firm_3bit_resume,saliency_source_ablation,saliency_dictfree}.sh`
+  — convention copied from surviving `sbatch_tacq_spider_llama31_replication.sh`.
+
+### Remaining dependency
+- `scripts/data_prep_contrastive.py` is still **blueprint-only** (`recovery/recon/`).
+  The runners call it under `|| WARN`, so they fall back to the **surviving**
+  `data/contrastive/*.jsonl`. Only needed to *regenerate* pairs (FORCE_RECOMPUTE);
+  clean it from the blueprint before relying on a fresh pair build.
 - ~~`scripts/extraction/convert_tdso_mask.py`~~ → **REBUILT** (verified against
   `TACQ/gptq/llama.py` `--important_mask` contract: flat `{config_key: bool}` dict,
   `config_key = "model.layers.{i}.{name}.weight"`). Just unwraps `{"masks": ...}`.
