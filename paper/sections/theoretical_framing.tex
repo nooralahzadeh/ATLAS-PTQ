@@ -1,0 +1,34 @@
+\section{Theoretical Framing: Encoded--Used Gap Dissociation}
+\label{sec:encoded-used}
+
+We frame \method{} against \baseline{} as a \emph{targeted scalpel} vs.\ a \emph{global broadsword}.
+Both preserve a tiny FP16 outlier budget under mixed-precision GPTQ; they differ in \emph{what signal
+selects} those outliers.
+
+\paragraph{The encoded--used ambiguity in \baseline{}.}
+Cross-entropy on final logits conflates two roles of weights in text-to-SQL:
+\begin{itemize}
+  \item \textbf{Encoding:} weights that store schema syntax, SQL templates, and lexical priors
+        (often active whenever SQL-like tokens appear).
+  \item \textbf{Using:} weights on causal execution edges---routing that binds columns, applies
+        aggregations, and composes structure for the \emph{current} question.
+\end{itemize}
+Because CE gradients flow through the full vocabulary, \baseline{}'s contrastive saliency still
+ mixes encoding and use under a single polysemantic ranking~\citep{xiao2025tacq}.
+At 0.35\% outliers, wasting budget on passive encoders directly costs execution accuracy on Spider.
+
+\paragraph{Dissociation via $F_{\text{task}}$.}
+\method{} selects transcoder features with $\Delta a = \mathrm{ReLU}(a_{\text{clean}} - a_{\text{corr}}) > \tau$
+and builds $y^{\text{target}}$ only from this task set $F_{\text{task}}$.
+Gradients therefore align with weights that implement \emph{contrastive, task-active} MLP directions,
+not every pathway that lowers CE on SQL surface form.
+We call this \textbf{encoded--used gap dissociation}: outliers target active routing momentum rather
+than undifferentiated static memory.
+\todo{Cite feature-level audit or layer analysis supporting dissociation.}
+
+\paragraph{What we claim in v1 vs.\ systems extensions.}
+\textbf{v1 (this paper):} same static mask, same quantizer, same budget as \baseline{}; test whether
+dissociation improves Spider execution accuracy at 2--3 bits.
+\textbf{Extensions (outlook, \S\ref{sec:systems-outlook}):} distinct sub-task masks, orthogonality
+constraints, and KV-cache-preserving hot-swaps---architectural capabilities \baseline{}'s static
+monolith cannot express.

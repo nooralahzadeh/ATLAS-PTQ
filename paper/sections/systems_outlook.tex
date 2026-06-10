@@ -1,0 +1,33 @@
+\section{Systems Outlook: Dynamic Sparse Overlays}
+\label{sec:systems-outlook}
+
+Beyond static PTQ comparison, \method{} motivates a \textbf{Dynamic Sparse Overlay} execution model
+not available to \baseline{}.
+We do \emph{not} claim these systems results in v1; they define the research arc if v1 dissociation
+holds empirically.
+
+\paragraph{Agentic hot-swapping.}
+\baseline{} produces one task-conditioned mask baked into the quantized checkpoint---configuration is
+fixed for the inference job.
+If sub-skills (schema linking, SQL generation, self-correction) prefer different outlier sets,
+\baseline{} must compromise with a single global top-$k$.
+\method{}'s feature-space objective naturally supports \emph{separate calibration streams} per
+sub-skill and, with an orthogonality penalty on mask overlap, non-redundant overlays
+$M_{\text{link}}$, $M_{\text{gen}}$, $M_{\text{fix}}$.
+At runtime, only the FP16 outlier values differ; the 2-bit base $W_{\text{2bit}}$ stays resident while
+overlay tables stream (e.g., via PCIe into on-chip SRAM).
+\todo{Formalize QAL + orthogonality penalty; implement mask streaming benchmark.}
+
+\paragraph{KV-cache inheritance.}
+Multi-step text-to-SQL pipelines often chain agents as separate API calls.
+Each call re-tokenizes history and recomputes attention from scratch---$O(N^2)$ per step.
+With a shared frozen $W_{\text{2bit}}$ and hot-swapped overlays, a downstream sub-circuit inherits the
+prior step's KV cache; only overlay weights and the active \method{} mask change.
+Time-to-first-token for steps 2+ approaches cache-append cost rather than full prefill.
+\todo{Microbenchmark TTFT: static TaCQ vs.\ overlay swap on two-step Spider prompt.}
+
+\paragraph{Positioning for reviewers.}
+Dimensions 2--3 are \emph{enabled by} feature dissociation plus mixed-precision structure; v1
+validates Dimension 1 (Spider exec accuracy at matched budget).
+Systems claims require separate engineering evidence and belong in an extended version or companion
+systems section once built.

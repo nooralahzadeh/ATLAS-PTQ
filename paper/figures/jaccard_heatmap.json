@@ -1,0 +1,1462 @@
+{
+  "label_a": "TaCQ",
+  "label_b": "T-DSO",
+  "global": {
+    "intersection": 11222517,
+    "union": 37632735,
+    "jaccard": 0.29821157032567525,
+    "kept_a": 24427626,
+    "kept_b": 24427626,
+    "a_only": 13205109,
+    "b_only": 13205109,
+    "prec_a_in_b": 0.4594190610254144,
+    "prec_b_in_a": 0.4594190610254144
+  },
+  "by_component": {
+    "down_proj": {
+      "inter": 2278934,
+      "a_only": 3542579,
+      "b_only": 2901319
+    },
+    "gate_proj": {
+      "inter": 2042941,
+      "a_only": 3760881,
+      "b_only": 2280345
+    },
+    "up_proj": {
+      "inter": 1803052,
+      "a_only": 2911068,
+      "b_only": 2491524
+    },
+    "k_proj": {
+      "inter": 1562133,
+      "a_only": 691235,
+      "b_only": 1317704
+    },
+    "o_proj": {
+      "inter": 1514672,
+      "a_only": 1042345,
+      "b_only": 2156596
+    },
+    "q_proj": {
+      "inter": 1466904,
+      "a_only": 915153,
+      "b_only": 1298670
+    },
+    "v_proj": {
+      "inter": 553881,
+      "a_only": 341848,
+      "b_only": 758951
+    }
+  },
+  "by_layer": [
+    {
+      "layer": 9,
+      "inter": 577340,
+      "a_only": 457851,
+      "b_only": 864059,
+      "exclusive_total": 1321910,
+      "components": {
+        "down_proj": {
+          "inter": 128739,
+          "a_only": 130950,
+          "b_only": 204128
+        },
+        "gate_proj": {
+          "inter": 102842,
+          "a_only": 124567,
+          "b_only": 136339
+        },
+        "up_proj": {
+          "inter": 99619,
+          "a_only": 103143,
+          "b_only": 167125
+        },
+        "k_proj": {
+          "inter": 53446,
+          "a_only": 15477,
+          "b_only": 65571
+        },
+        "o_proj": {
+          "inter": 113385,
+          "a_only": 48125,
+          "b_only": 174643
+        },
+        "q_proj": {
+          "inter": 61172,
+          "a_only": 27471,
+          "b_only": 77891
+        },
+        "v_proj": {
+          "inter": 18137,
+          "a_only": 8118,
+          "b_only": 38362
+        }
+      }
+    },
+    {
+      "layer": 12,
+      "inter": 566238,
+      "a_only": 578327,
+      "b_only": 710757,
+      "exclusive_total": 1289084,
+      "components": {
+        "down_proj": {
+          "inter": 123251,
+          "a_only": 160519,
+          "b_only": 151100
+        },
+        "gate_proj": {
+          "inter": 91940,
+          "a_only": 126667,
+          "b_only": 94132
+        },
+        "up_proj": {
+          "inter": 104648,
+          "a_only": 139771,
+          "b_only": 127121
+        },
+        "k_proj": {
+          "inter": 47476,
+          "a_only": 19604,
+          "b_only": 60129
+        },
+        "o_proj": {
+          "inter": 116602,
+          "a_only": 79388,
+          "b_only": 166096
+        },
+        "q_proj": {
+          "inter": 48252,
+          "a_only": 33736,
+          "b_only": 59098
+        },
+        "v_proj": {
+          "inter": 34069,
+          "a_only": 18642,
+          "b_only": 53081
+        }
+      }
+    },
+    {
+      "layer": 14,
+      "inter": 596586,
+      "a_only": 673757,
+      "b_only": 585034,
+      "exclusive_total": 1258791,
+      "components": {
+        "down_proj": {
+          "inter": 127804,
+          "a_only": 198583,
+          "b_only": 131991
+        },
+        "gate_proj": {
+          "inter": 93223,
+          "a_only": 147633,
+          "b_only": 79671
+        },
+        "up_proj": {
+          "inter": 110772,
+          "a_only": 168972,
+          "b_only": 117118
+        },
+        "k_proj": {
+          "inter": 69244,
+          "a_only": 35054,
+          "b_only": 47846
+        },
+        "o_proj": {
+          "inter": 105404,
+          "a_only": 60265,
+          "b_only": 131130
+        },
+        "q_proj": {
+          "inter": 70487,
+          "a_only": 50622,
+          "b_only": 52119
+        },
+        "v_proj": {
+          "inter": 19652,
+          "a_only": 12628,
+          "b_only": 25159
+        }
+      }
+    },
+    {
+      "layer": 8,
+      "inter": 516945,
+      "a_only": 429897,
+      "b_only": 821963,
+      "exclusive_total": 1251860,
+      "components": {
+        "down_proj": {
+          "inter": 118895,
+          "a_only": 125532,
+          "b_only": 190794
+        },
+        "gate_proj": {
+          "inter": 96718,
+          "a_only": 123741,
+          "b_only": 131228
+        },
+        "up_proj": {
+          "inter": 90054,
+          "a_only": 96205,
+          "b_only": 156823
+        },
+        "k_proj": {
+          "inter": 51139,
+          "a_only": 15326,
+          "b_only": 64036
+        },
+        "o_proj": {
+          "inter": 96026,
+          "a_only": 41330,
+          "b_only": 172707
+        },
+        "q_proj": {
+          "inter": 47473,
+          "a_only": 20318,
+          "b_only": 71815
+        },
+        "v_proj": {
+          "inter": 16640,
+          "a_only": 7445,
+          "b_only": 34560
+        }
+      }
+    },
+    {
+      "layer": 10,
+      "inter": 522646,
+      "a_only": 436424,
+      "b_only": 811085,
+      "exclusive_total": 1247509,
+      "components": {
+        "down_proj": {
+          "inter": 117895,
+          "a_only": 121899,
+          "b_only": 197309
+        },
+        "gate_proj": {
+          "inter": 90566,
+          "a_only": 116096,
+          "b_only": 132114
+        },
+        "up_proj": {
+          "inter": 96999,
+          "a_only": 99084,
+          "b_only": 176886
+        },
+        "k_proj": {
+          "inter": 65804,
+          "a_only": 19572,
+          "b_only": 73513
+        },
+        "o_proj": {
+          "inter": 73583,
+          "a_only": 32078,
+          "b_only": 132059
+        },
+        "q_proj": {
+          "inter": 63009,
+          "a_only": 40148,
+          "b_only": 69297
+        },
+        "v_proj": {
+          "inter": 14790,
+          "a_only": 7547,
+          "b_only": 29907
+        }
+      }
+    },
+    {
+      "layer": 11,
+      "inter": 530350,
+      "a_only": 442004,
+      "b_only": 804623,
+      "exclusive_total": 1246627,
+      "components": {
+        "down_proj": {
+          "inter": 112883,
+          "a_only": 123559,
+          "b_only": 169502
+        },
+        "gate_proj": {
+          "inter": 91063,
+          "a_only": 123879,
+          "b_only": 118801
+        },
+        "up_proj": {
+          "inter": 97846,
+          "a_only": 107299,
+          "b_only": 163915
+        },
+        "k_proj": {
+          "inter": 57705,
+          "a_only": 16413,
+          "b_only": 78492
+        },
+        "o_proj": {
+          "inter": 101002,
+          "a_only": 38245,
+          "b_only": 162085
+        },
+        "q_proj": {
+          "inter": 57150,
+          "a_only": 27129,
+          "b_only": 80177
+        },
+        "v_proj": {
+          "inter": 12701,
+          "a_only": 5480,
+          "b_only": 31651
+        }
+      }
+    },
+    {
+      "layer": 7,
+      "inter": 514026,
+      "a_only": 443350,
+      "b_only": 784378,
+      "exclusive_total": 1227728,
+      "components": {
+        "down_proj": {
+          "inter": 121004,
+          "a_only": 130916,
+          "b_only": 192135
+        },
+        "gate_proj": {
+          "inter": 101980,
+          "a_only": 123675,
+          "b_only": 141124
+        },
+        "up_proj": {
+          "inter": 97125,
+          "a_only": 102026,
+          "b_only": 164097
+        },
+        "k_proj": {
+          "inter": 60899,
+          "a_only": 19885,
+          "b_only": 67945
+        },
+        "o_proj": {
+          "inter": 73113,
+          "a_only": 35369,
+          "b_only": 124498
+        },
+        "q_proj": {
+          "inter": 47202,
+          "a_only": 25742,
+          "b_only": 64480
+        },
+        "v_proj": {
+          "inter": 12703,
+          "a_only": 5737,
+          "b_only": 30099
+        }
+      }
+    },
+    {
+      "layer": 6,
+      "inter": 490790,
+      "a_only": 446624,
+      "b_only": 774513,
+      "exclusive_total": 1221137,
+      "components": {
+        "down_proj": {
+          "inter": 116762,
+          "a_only": 127011,
+          "b_only": 191451
+        },
+        "gate_proj": {
+          "inter": 110561,
+          "a_only": 133489,
+          "b_only": 153156
+        },
+        "up_proj": {
+          "inter": 98227,
+          "a_only": 101485,
+          "b_only": 177312
+        },
+        "k_proj": {
+          "inter": 50245,
+          "a_only": 17173,
+          "b_only": 68876
+        },
+        "o_proj": {
+          "inter": 57265,
+          "a_only": 34701,
+          "b_only": 90140
+        },
+        "q_proj": {
+          "inter": 46235,
+          "a_only": 24812,
+          "b_only": 67618
+        },
+        "v_proj": {
+          "inter": 11495,
+          "a_only": 7953,
+          "b_only": 25960
+        }
+      }
+    },
+    {
+      "layer": 4,
+      "inter": 518167,
+      "a_only": 496860,
+      "b_only": 695200,
+      "exclusive_total": 1192060,
+      "components": {
+        "down_proj": {
+          "inter": 102160,
+          "a_only": 124395,
+          "b_only": 153258
+        },
+        "gate_proj": {
+          "inter": 110331,
+          "a_only": 143049,
+          "b_only": 143990
+        },
+        "up_proj": {
+          "inter": 92179,
+          "a_only": 102571,
+          "b_only": 149349
+        },
+        "k_proj": {
+          "inter": 64843,
+          "a_only": 23339,
+          "b_only": 62045
+        },
+        "o_proj": {
+          "inter": 67864,
+          "a_only": 58677,
+          "b_only": 94375
+        },
+        "q_proj": {
+          "inter": 57622,
+          "a_only": 26451,
+          "b_only": 60311
+        },
+        "v_proj": {
+          "inter": 23168,
+          "a_only": 18378,
+          "b_only": 31872
+        }
+      }
+    },
+    {
+      "layer": 13,
+      "inter": 542549,
+      "a_only": 592720,
+      "b_only": 590282,
+      "exclusive_total": 1183002,
+      "components": {
+        "down_proj": {
+          "inter": 112779,
+          "a_only": 164180,
+          "b_only": 130693
+        },
+        "gate_proj": {
+          "inter": 85611,
+          "a_only": 128681,
+          "b_only": 76711
+        },
+        "up_proj": {
+          "inter": 95767,
+          "a_only": 141901,
+          "b_only": 107663
+        },
+        "k_proj": {
+          "inter": 57494,
+          "a_only": 30564,
+          "b_only": 47894
+        },
+        "o_proj": {
+          "inter": 99488,
+          "a_only": 54798,
+          "b_only": 134398
+        },
+        "q_proj": {
+          "inter": 73334,
+          "a_only": 62602,
+          "b_only": 63898
+        },
+        "v_proj": {
+          "inter": 18076,
+          "a_only": 9994,
+          "b_only": 29025
+        }
+      }
+    },
+    {
+      "layer": 5,
+      "inter": 497155,
+      "a_only": 449324,
+      "b_only": 724805,
+      "exclusive_total": 1174129,
+      "components": {
+        "down_proj": {
+          "inter": 112156,
+          "a_only": 131934,
+          "b_only": 175828
+        },
+        "gate_proj": {
+          "inter": 108699,
+          "a_only": 140862,
+          "b_only": 147795
+        },
+        "up_proj": {
+          "inter": 96803,
+          "a_only": 105689,
+          "b_only": 162278
+        },
+        "k_proj": {
+          "inter": 68986,
+          "a_only": 19070,
+          "b_only": 72787
+        },
+        "o_proj": {
+          "inter": 47908,
+          "a_only": 26811,
+          "b_only": 80008
+        },
+        "q_proj": {
+          "inter": 53961,
+          "a_only": 18782,
+          "b_only": 66326
+        },
+        "v_proj": {
+          "inter": 8642,
+          "a_only": 6176,
+          "b_only": 19783
+        }
+      }
+    },
+    {
+      "layer": 15,
+      "inter": 525314,
+      "a_only": 695392,
+      "b_only": 472181,
+      "exclusive_total": 1167573,
+      "components": {
+        "down_proj": {
+          "inter": 102765,
+          "a_only": 198487,
+          "b_only": 99457
+        },
+        "gate_proj": {
+          "inter": 79327,
+          "a_only": 156137,
+          "b_only": 60522
+        },
+        "up_proj": {
+          "inter": 79644,
+          "a_only": 167569,
+          "b_only": 75623
+        },
+        "k_proj": {
+          "inter": 75133,
+          "a_only": 38581,
+          "b_only": 50889
+        },
+        "o_proj": {
+          "inter": 77836,
+          "a_only": 50507,
+          "b_only": 95846
+        },
+        "q_proj": {
+          "inter": 84553,
+          "a_only": 71207,
+          "b_only": 55130
+        },
+        "v_proj": {
+          "inter": 26056,
+          "a_only": 12904,
+          "b_only": 34714
+        }
+      }
+    },
+    {
+      "layer": 3,
+      "inter": 421424,
+      "a_only": 441788,
+      "b_only": 610951,
+      "exclusive_total": 1052739,
+      "components": {
+        "down_proj": {
+          "inter": 87219,
+          "a_only": 119332,
+          "b_only": 127031
+        },
+        "gate_proj": {
+          "inter": 91748,
+          "a_only": 138293,
+          "b_only": 117822
+        },
+        "up_proj": {
+          "inter": 70724,
+          "a_only": 97658,
+          "b_only": 114950
+        },
+        "k_proj": {
+          "inter": 60453,
+          "a_only": 18069,
+          "b_only": 80481
+        },
+        "o_proj": {
+          "inter": 44880,
+          "a_only": 34360,
+          "b_only": 73919
+        },
+        "q_proj": {
+          "inter": 49990,
+          "a_only": 22547,
+          "b_only": 67212
+        },
+        "v_proj": {
+          "inter": 16410,
+          "a_only": 11529,
+          "b_only": 29536
+        }
+      }
+    },
+    {
+      "layer": 2,
+      "inter": 446465,
+      "a_only": 467563,
+      "b_only": 545184,
+      "exclusive_total": 1012747,
+      "components": {
+        "down_proj": {
+          "inter": 83828,
+          "a_only": 130945,
+          "b_only": 110234
+        },
+        "gate_proj": {
+          "inter": 76811,
+          "a_only": 129683,
+          "b_only": 105602
+        },
+        "up_proj": {
+          "inter": 63638,
+          "a_only": 105785,
+          "b_only": 98575
+        },
+        "k_proj": {
+          "inter": 93718,
+          "a_only": 21142,
+          "b_only": 79987
+        },
+        "o_proj": {
+          "inter": 43865,
+          "a_only": 41894,
+          "b_only": 57046
+        },
+        "q_proj": {
+          "inter": 73056,
+          "a_only": 27177,
+          "b_only": 74819
+        },
+        "v_proj": {
+          "inter": 11549,
+          "a_only": 10937,
+          "b_only": 18921
+        }
+      }
+    },
+    {
+      "layer": 16,
+      "inter": 374671,
+      "a_only": 626096,
+      "b_only": 315105,
+      "exclusive_total": 941201,
+      "components": {
+        "down_proj": {
+          "inter": 81634,
+          "a_only": 180119,
+          "b_only": 75958
+        },
+        "gate_proj": {
+          "inter": 69273,
+          "a_only": 164978,
+          "b_only": 56105
+        },
+        "up_proj": {
+          "inter": 60052,
+          "a_only": 146055,
+          "b_only": 56817
+        },
+        "k_proj": {
+          "inter": 49489,
+          "a_only": 28471,
+          "b_only": 28416
+        },
+        "o_proj": {
+          "inter": 41936,
+          "a_only": 41109,
+          "b_only": 54111
+        },
+        "q_proj": {
+          "inter": 51762,
+          "a_only": 50748,
+          "b_only": 24885
+        },
+        "v_proj": {
+          "inter": 20525,
+          "a_only": 14616,
+          "b_only": 18813
+        }
+      }
+    },
+    {
+      "layer": 17,
+      "inter": 326598,
+      "a_only": 606680,
+      "b_only": 292264,
+      "exclusive_total": 898944,
+      "components": {
+        "down_proj": {
+          "inter": 76654,
+          "a_only": 174798,
+          "b_only": 70821
+        },
+        "gate_proj": {
+          "inter": 68753,
+          "a_only": 174003,
+          "b_only": 53563
+        },
+        "up_proj": {
+          "inter": 50996,
+          "a_only": 134291,
+          "b_only": 49309
+        },
+        "k_proj": {
+          "inter": 42815,
+          "a_only": 36281,
+          "b_only": 27012
+        },
+        "o_proj": {
+          "inter": 36627,
+          "a_only": 31507,
+          "b_only": 49419
+        },
+        "q_proj": {
+          "inter": 38446,
+          "a_only": 44185,
+          "b_only": 21718
+        },
+        "v_proj": {
+          "inter": 12307,
+          "a_only": 11615,
+          "b_only": 20422
+        }
+      }
+    },
+    {
+      "layer": 1,
+      "inter": 364713,
+      "a_only": 318330,
+      "b_only": 399941,
+      "exclusive_total": 718271,
+      "components": {
+        "down_proj": {
+          "inter": 82120,
+          "a_only": 86081,
+          "b_only": 90031
+        },
+        "gate_proj": {
+          "inter": 59176,
+          "a_only": 89795,
+          "b_only": 68732
+        },
+        "up_proj": {
+          "inter": 49778,
+          "a_only": 71429,
+          "b_only": 70439
+        },
+        "k_proj": {
+          "inter": 53113,
+          "a_only": 12137,
+          "b_only": 32811
+        },
+        "o_proj": {
+          "inter": 49474,
+          "a_only": 29058,
+          "b_only": 70550
+        },
+        "q_proj": {
+          "inter": 56379,
+          "a_only": 18205,
+          "b_only": 42264
+        },
+        "v_proj": {
+          "inter": 14673,
+          "a_only": 11625,
+          "b_only": 25114
+        }
+      }
+    },
+    {
+      "layer": 18,
+      "inter": 220451,
+      "a_only": 503386,
+      "b_only": 185199,
+      "exclusive_total": 688585,
+      "components": {
+        "down_proj": {
+          "inter": 55518,
+          "a_only": 153289,
+          "b_only": 53834
+        },
+        "gate_proj": {
+          "inter": 58616,
+          "a_only": 172787,
+          "b_only": 49360
+        },
+        "up_proj": {
+          "inter": 39187,
+          "a_only": 121606,
+          "b_only": 39425
+        },
+        "k_proj": {
+          "inter": 24430,
+          "a_only": 17867,
+          "b_only": 9923
+        },
+        "o_proj": {
+          "inter": 13801,
+          "a_only": 14004,
+          "b_only": 15652
+        },
+        "q_proj": {
+          "inter": 19940,
+          "a_only": 19233,
+          "b_only": 8920
+        },
+        "v_proj": {
+          "inter": 8959,
+          "a_only": 4600,
+          "b_only": 8085
+        }
+      }
+    },
+    {
+      "layer": 19,
+      "inter": 223786,
+      "a_only": 472034,
+      "b_only": 193946,
+      "exclusive_total": 665980,
+      "components": {
+        "down_proj": {
+          "inter": 42439,
+          "a_only": 129869,
+          "b_only": 42294
+        },
+        "gate_proj": {
+          "inter": 50405,
+          "a_only": 164429,
+          "b_only": 44275
+        },
+        "up_proj": {
+          "inter": 30814,
+          "a_only": 104368,
+          "b_only": 32145
+        },
+        "k_proj": {
+          "inter": 39354,
+          "a_only": 21362,
+          "b_only": 22292
+        },
+        "o_proj": {
+          "inter": 13944,
+          "a_only": 15295,
+          "b_only": 22665
+        },
+        "q_proj": {
+          "inter": 36682,
+          "a_only": 30648,
+          "b_only": 18134
+        },
+        "v_proj": {
+          "inter": 10148,
+          "a_only": 6063,
+          "b_only": 12141
+        }
+      }
+    },
+    {
+      "layer": 20,
+      "inter": 197936,
+      "a_only": 469606,
+      "b_only": 153047,
+      "exclusive_total": 622653,
+      "components": {
+        "down_proj": {
+          "inter": 37675,
+          "a_only": 118800,
+          "b_only": 36903
+        },
+        "gate_proj": {
+          "inter": 46423,
+          "a_only": 156679,
+          "b_only": 40131
+        },
+        "up_proj": {
+          "inter": 28668,
+          "a_only": 99157,
+          "b_only": 28525
+        },
+        "k_proj": {
+          "inter": 26750,
+          "a_only": 21952,
+          "b_only": 12267
+        },
+        "o_proj": {
+          "inter": 21655,
+          "a_only": 34022,
+          "b_only": 14196
+        },
+        "q_proj": {
+          "inter": 26879,
+          "a_only": 28646,
+          "b_only": 12990
+        },
+        "v_proj": {
+          "inter": 9886,
+          "a_only": 10350,
+          "b_only": 8035
+        }
+      }
+    },
+    {
+      "layer": 0,
+      "inter": 348546,
+      "a_only": 313783,
+      "b_only": 291456,
+      "exclusive_total": 605239,
+      "components": {
+        "down_proj": {
+          "inter": 83853,
+          "a_only": 91426,
+          "b_only": 80725
+        },
+        "gate_proj": {
+          "inter": 38349,
+          "a_only": 46753,
+          "b_only": 43322
+        },
+        "up_proj": {
+          "inter": 32607,
+          "a_only": 45919,
+          "b_only": 42835
+        },
+        "k_proj": {
+          "inter": 66341,
+          "a_only": 22413,
+          "b_only": 33488
+        },
+        "o_proj": {
+          "inter": 64738,
+          "a_only": 72651,
+          "b_only": 46677
+        },
+        "q_proj": {
+          "inter": 47733,
+          "a_only": 20236,
+          "b_only": 29864
+        },
+        "v_proj": {
+          "inter": 14925,
+          "a_only": 14385,
+          "b_only": 14545
+        }
+      }
+    },
+    {
+      "layer": 21,
+      "inter": 195869,
+      "a_only": 418621,
+      "b_only": 159584,
+      "exclusive_total": 578205,
+      "components": {
+        "down_proj": {
+          "inter": 32825,
+          "a_only": 101474,
+          "b_only": 31656
+        },
+        "gate_proj": {
+          "inter": 44406,
+          "a_only": 144787,
+          "b_only": 37214
+        },
+        "up_proj": {
+          "inter": 24488,
+          "a_only": 84649,
+          "b_only": 24627
+        },
+        "k_proj": {
+          "inter": 34755,
+          "a_only": 28077,
+          "b_only": 20125
+        },
+        "o_proj": {
+          "inter": 15798,
+          "a_only": 16117,
+          "b_only": 18840
+        },
+        "q_proj": {
+          "inter": 33270,
+          "a_only": 35077,
+          "b_only": 16263
+        },
+        "v_proj": {
+          "inter": 10327,
+          "a_only": 8440,
+          "b_only": 10859
+        }
+      }
+    },
+    {
+      "layer": 31,
+      "inter": 257741,
+      "a_only": 281841,
+      "b_only": 213622,
+      "exclusive_total": 495463,
+      "components": {
+        "down_proj": {
+          "inter": 53700,
+          "a_only": 94714,
+          "b_only": 10180
+        },
+        "gate_proj": {
+          "inter": 28874,
+          "a_only": 76363,
+          "b_only": 21193
+        },
+        "up_proj": {
+          "inter": 37819,
+          "a_only": 54422,
+          "b_only": 26503
+        },
+        "k_proj": {
+          "inter": 39119,
+          "a_only": 14242,
+          "b_only": 36867
+        },
+        "o_proj": {
+          "inter": 30519,
+          "a_only": 16149,
+          "b_only": 34791
+        },
+        "q_proj": {
+          "inter": 22061,
+          "a_only": 13661,
+          "b_only": 22835
+        },
+        "v_proj": {
+          "inter": 45649,
+          "a_only": 12290,
+          "b_only": 61253
+        }
+      }
+    },
+    {
+      "layer": 22,
+      "inter": 136542,
+      "a_only": 330939,
+      "b_only": 124196,
+      "exclusive_total": 455135,
+      "components": {
+        "down_proj": {
+          "inter": 23637,
+          "a_only": 83231,
+          "b_only": 24492
+        },
+        "gate_proj": {
+          "inter": 34467,
+          "a_only": 126559,
+          "b_only": 32287
+        },
+        "up_proj": {
+          "inter": 18691,
+          "a_only": 75779,
+          "b_only": 19588
+        },
+        "k_proj": {
+          "inter": 22735,
+          "a_only": 11888,
+          "b_only": 15574
+        },
+        "o_proj": {
+          "inter": 9799,
+          "a_only": 12789,
+          "b_only": 12093
+        },
+        "q_proj": {
+          "inter": 19019,
+          "a_only": 13255,
+          "b_only": 11802
+        },
+        "v_proj": {
+          "inter": 8194,
+          "a_only": 7438,
+          "b_only": 8360
+        }
+      }
+    },
+    {
+      "layer": 23,
+      "inter": 129050,
+      "a_only": 321384,
+      "b_only": 94469,
+      "exclusive_total": 415853,
+      "components": {
+        "down_proj": {
+          "inter": 20135,
+          "a_only": 70325,
+          "b_only": 20204
+        },
+        "gate_proj": {
+          "inter": 29420,
+          "a_only": 110636,
+          "b_only": 26419
+        },
+        "up_proj": {
+          "inter": 15611,
+          "a_only": 64085,
+          "b_only": 15981
+        },
+        "k_proj": {
+          "inter": 28080,
+          "a_only": 27796,
+          "b_only": 11546
+        },
+        "o_proj": {
+          "inter": 5428,
+          "a_only": 12855,
+          "b_only": 5449
+        },
+        "q_proj": {
+          "inter": 22249,
+          "a_only": 24980,
+          "b_only": 8124
+        },
+        "v_proj": {
+          "inter": 8127,
+          "a_only": 10707,
+          "b_only": 6746
+        }
+      }
+    },
+    {
+      "layer": 30,
+      "inter": 223270,
+      "a_only": 188513,
+      "b_only": 205905,
+      "exclusive_total": 394418,
+      "components": {
+        "down_proj": {
+          "inter": 26772,
+          "a_only": 29492,
+          "b_only": 29357
+        },
+        "gate_proj": {
+          "inter": 30017,
+          "a_only": 52648,
+          "b_only": 30939
+        },
+        "up_proj": {
+          "inter": 25112,
+          "a_only": 33753,
+          "b_only": 28434
+        },
+        "k_proj": {
+          "inter": 39707,
+          "a_only": 18714,
+          "b_only": 20531
+        },
+        "o_proj": {
+          "inter": 20428,
+          "a_only": 16765,
+          "b_only": 34772
+        },
+        "q_proj": {
+          "inter": 31931,
+          "a_only": 19992,
+          "b_only": 13509
+        },
+        "v_proj": {
+          "inter": 49303,
+          "a_only": 17149,
+          "b_only": 48363
+        }
+      }
+    },
+    {
+      "layer": 29,
+      "inter": 251787,
+      "a_only": 195276,
+      "b_only": 194050,
+      "exclusive_total": 389326,
+      "components": {
+        "down_proj": {
+          "inter": 22254,
+          "a_only": 31499,
+          "b_only": 24412
+        },
+        "gate_proj": {
+          "inter": 28567,
+          "a_only": 48081,
+          "b_only": 21717
+        },
+        "up_proj": {
+          "inter": 21960,
+          "a_only": 28646,
+          "b_only": 22535
+        },
+        "k_proj": {
+          "inter": 51946,
+          "a_only": 23233,
+          "b_only": 31362
+        },
+        "o_proj": {
+          "inter": 19237,
+          "a_only": 21346,
+          "b_only": 19260
+        },
+        "q_proj": {
+          "inter": 85263,
+          "a_only": 28345,
+          "b_only": 56788
+        },
+        "v_proj": {
+          "inter": 22560,
+          "a_only": 14126,
+          "b_only": 17976
+        }
+      }
+    },
+    {
+      "layer": 24,
+      "inter": 131939,
+      "a_only": 277345,
+      "b_only": 103691,
+      "exclusive_total": 381036,
+      "components": {
+        "down_proj": {
+          "inter": 15300,
+          "a_only": 58048,
+          "b_only": 17175
+        },
+        "gate_proj": {
+          "inter": 25089,
+          "a_only": 97192,
+          "b_only": 23128
+        },
+        "up_proj": {
+          "inter": 14259,
+          "a_only": 53503,
+          "b_only": 14420
+        },
+        "k_proj": {
+          "inter": 30202,
+          "a_only": 20979,
+          "b_only": 14559
+        },
+        "o_proj": {
+          "inter": 7422,
+          "a_only": 13957,
+          "b_only": 9730
+        },
+        "q_proj": {
+          "inter": 25004,
+          "a_only": 19677,
+          "b_only": 13396
+        },
+        "v_proj": {
+          "inter": 14663,
+          "a_only": 13989,
+          "b_only": 11283
+        }
+      }
+    },
+    {
+      "layer": 27,
+      "inter": 180524,
+      "a_only": 200858,
+      "b_only": 140399,
+      "exclusive_total": 341257,
+      "components": {
+        "down_proj": {
+          "inter": 13017,
+          "a_only": 33075,
+          "b_only": 17522
+        },
+        "gate_proj": {
+          "inter": 25727,
+          "a_only": 64505,
+          "b_only": 24069
+        },
+        "up_proj": {
+          "inter": 15103,
+          "a_only": 36047,
+          "b_only": 15624
+        },
+        "k_proj": {
+          "inter": 52944,
+          "a_only": 24296,
+          "b_only": 27993
+        },
+        "o_proj": {
+          "inter": 13467,
+          "a_only": 13191,
+          "b_only": 18217
+        },
+        "q_proj": {
+          "inter": 42296,
+          "a_only": 21510,
+          "b_only": 21339
+        },
+        "v_proj": {
+          "inter": 17970,
+          "a_only": 8234,
+          "b_only": 15635
+        }
+      }
+    },
+    {
+      "layer": 25,
+      "inter": 118886,
+      "a_only": 241578,
+      "b_only": 93383,
+      "exclusive_total": 334961,
+      "components": {
+        "down_proj": {
+          "inter": 12955,
+          "a_only": 47662,
+          "b_only": 14822
+        },
+        "gate_proj": {
+          "inter": 23769,
+          "a_only": 86385,
+          "b_only": 21753
+        },
+        "up_proj": {
+          "inter": 12571,
+          "a_only": 46217,
+          "b_only": 13418
+        },
+        "k_proj": {
+          "inter": 27089,
+          "a_only": 22224,
+          "b_only": 13044
+        },
+        "o_proj": {
+          "inter": 7290,
+          "a_only": 9738,
+          "b_only": 9409
+        },
+        "q_proj": {
+          "inter": 24145,
+          "a_only": 19985,
+          "b_only": 12343
+        },
+        "v_proj": {
+          "inter": 11067,
+          "a_only": 9367,
+          "b_only": 8594
+        }
+      }
+    },
+    {
+      "layer": 28,
+      "inter": 149058,
+      "a_only": 166005,
+      "b_only": 153380,
+      "exclusive_total": 319385,
+      "components": {
+        "down_proj": {
+          "inter": 17793,
+          "a_only": 32055,
+          "b_only": 20886
+        },
+        "gate_proj": {
+          "inter": 27323,
+          "a_only": 54088,
+          "b_only": 26012
+        },
+        "up_proj": {
+          "inter": 18701,
+          "a_only": 31806,
+          "b_only": 18930
+        },
+        "k_proj": {
+          "inter": 30000,
+          "a_only": 11509,
+          "b_only": 27000
+        },
+        "o_proj": {
+          "inter": 15130,
+          "a_only": 14181,
+          "b_only": 22122
+        },
+        "q_proj": {
+          "inter": 23479,
+          "a_only": 11548,
+          "b_only": 20103
+        },
+        "v_proj": {
+          "inter": 16632,
+          "a_only": 10818,
+          "b_only": 18327
+        }
+      }
+    },
+    {
+      "layer": 26,
+      "inter": 125155,
+      "a_only": 220953,
+      "b_only": 96457,
+      "exclusive_total": 317410,
+      "components": {
+        "down_proj": {
+          "inter": 12513,
+          "a_only": 38380,
+          "b_only": 15136
+        },
+        "gate_proj": {
+          "inter": 22867,
+          "a_only": 73761,
+          "b_only": 21119
+        },
+        "up_proj": {
+          "inter": 12590,
+          "a_only": 40178,
+          "b_only": 13134
+        },
+        "k_proj": {
+          "inter": 26679,
+          "a_only": 18525,
+          "b_only": 12403
+        },
+        "o_proj": {
+          "inter": 9758,
+          "a_only": 21063,
+          "b_only": 9693
+        },
+        "q_proj": {
+          "inter": 26870,
+          "a_only": 16478,
+          "b_only": 13202
+        },
+        "v_proj": {
+          "inter": 13878,
+          "a_only": 12568,
+          "b_only": 11770
+        }
+      }
+    }
+  ]
+}

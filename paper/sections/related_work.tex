@@ -1,0 +1,114 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Post-training quantization.}
+GPTQ~\citep{frantar2023gptq} remains the workhorse for weight-only PTQ of LLMs.
+Activation-aware methods (AWQ~\citep{lin2024awq}), omnidirectional calibration
+(OmniQuant~\citep{shao2024omniquant}), and 2-bit specialized schemes
+(QuIP\#~\citep{chee2024quip}) improve uniform quantization but still degrade on hard reasoning
+tasks at 2 bits.
+Mixed-precision and sparse formats---LLM.int8()~\citep{dettmers2022llmint8},
+SPQR~\citep{dettmers2023spqr}, SliM-LLM~\citep{huang2025slimllm}---retain high-magnitude or
+salient weights in higher precision via magnitude, Hessian, or group-wise bit allocation.
+ReALLM~\citep{bedin2025reallm} compresses each weight matrix with a residual autoencoder plus
+vector quantization---a different architectural decomposition, not task-conditioned outlier
+selection.
+These methods generally define salience without an explicit \emph{task-circuit} or
+\emph{monosemantic feature} basis.
+
+\paragraph{Task-conditioned mixed precision.}
+\baseline{}~\citep{xiao2025tacq} is the closest prior work to ours.
+Presented at COLM 2025, it uses contrastive calibration, quantization-aware localization (QAL)
+and magnitude-sharpened gradients (MSG) with a global top-$p$ mask, explicitly connecting PTQ to
+automated circuit discovery and knowledge localization~\citep{conmy2023automated}.
+Across QA, math, and text-to-SQL on Llama-3 and Qwen2.5, \baseline{} outperforms SPQR and
+SliM-LLM at matched bit budgets---especially at 2--3 bits.
+We treat \baseline{} as the primary baseline because it shares our GPTQ stack, $\Delta W$ corrupt
+model, outlier fraction (0.35\%), and Spider evaluation protocol.
+However, \baseline{} scores \emph{polysemantic weights} via CE on logits; \method{} intersects CE
+with saliency routed through a monosemantic transcoder basis (\S\ref{sec:method}).
+Empirically, our v2 \texttt{mult} mask overlaps only 30\% (Jaccard $J{=}0.298$) with \baseline{} at the same
+budget (\S\ref{sec:mask-overlap}), showing the gain is not a minor reranking within \baseline{}'s
+weight pool.
+
+\paragraph{Superposition, polysemanticity, and sparse features.}
+\citet{elhage2021mathematical} argue that capacity constraints force LLMs to encode more features
+than neurons, yielding \emph{polysemantic} units whose activations mix many concepts.
+Dictionary learning and sparse autoencoders (SAEs) recover latents closer to
+\emph{monosemanticity}---each feature aligns with a narrower behavior~\citep{bricken2023monosemanticity,cunningham2024sparse}.
+Transcoders apply the same idea at MLP boundaries: they approximate $\mathrm{MLP}(x)$ with a
+wider, sparsely activating layer~\citep{dunefsky2024transcoders}, enabling cleaner circuit
+factorization than residual-stream SAEs~\citep{wright2025transcodersbeat}.
+Prior work uses these tools for \emph{analysis}, steering, or verification
+(\S\ref{sec:related-steering}); we ask whether monosemantic feature attribution should
+\emph{drive compression} by deciding which polysemantic weights must remain in FP16.
+
+\paragraph{Mechanistic interpretability, transcoders, and circuit verification.}
+Transformer circuits~\citep{elhage2021mathematical} and automated circuit discovery~\citep{conmy2023automated}
+seek sparse subgraphs explaining behaviors.
+Meta's Circuit Tracer and the public \texttt{crv-8b-instruct-transcoders} weights provide
+per-layer TopK transcoders for Llama-3.1-8B-Instruct~\citep{crv2026}.
+Circuit-based Reasoning Verification (CRV)~\citep{crv2026} replaces MLPs with these transcoders
+to build attribution graphs, classify reasoning errors, and intervene on individual features---the
+same sparse basis we use, but for \emph{runtime verification} rather than \emph{offline weight
+selection}.
+Unlike \baseline{}, which ranks polysemantic weights from CE gradients, \method{} attributes through
+this monosemantic feature basis first, then maps saliency back to physical parameters.
+
+\paragraph{Sparse-feature steering and contrastive attribution.}
+\label{sec:related-steering}
+Contrastive prompts (clean vs.\ corrupted inputs) appear in influence estimation, data attribution,
+and \baseline{}'s gradient capture.
+Sparse Activation Steering (SAS)~\citep{bayat2025sas}, also at COLM 2025, uses contrastive
+prompt pairs to isolate behavior-specific SAE latents and steer model activations at inference---
+sharing our motivation to escape superposition, but modifying \emph{activations} at test time
+rather than selecting \emph{weights} at compression time.
+SAE-Targeted Steering~\citep{chalnev2024saets} constructs steering vectors by modeling effects on
+SAE features; again, the output is a steering direction, not a quantization mask.
+We reuse contrastive calibration infrastructure but change \emph{what is being attributed}:
+transcoder feature activations on MLP hooks (and their intersection with CE), combined with
+$|W|\cdot|\Delta W|$ as in \baseline{}.
+
+\paragraph{Quantization vs.\ interpretability.}
+Recent work studies how PTQ \emph{damages} SAE features even when perplexity looks stable~\citep{quantfeatures2026},
+motivating feature-level audits of compressed models.
+Our direction is complementary: we use interpretability tools \emph{upstream} to choose a mask that
+preserves task performance, then measure whether the selected circuit differs from CE-only selection.
+
+\paragraph{Text-to-SQL as a testbed.}
+Spider~\citep{yu2018spider} is a standard semantic parsing benchmark requiring schema grounding
+and compositional SQL.
+It stress-tests structured output under quantization and matches \baseline{}'s headline results.
+We extend evaluation to \todo{GSM8K, HumanEval} for generality.
+
+\paragraph{Positioning.}
+Table~\ref{tab:positioning} summarizes how \method{} relates to the closest lines of work.
+To our knowledge, no prior conference paper uses transcoder (or SAE) task-feature attribution to
+select PTQ outlier \emph{weights} under a fixed FP16 budget and reports both (i)~downstream task
+gains vs.\ \baseline{} and (ii)~low mask overlap showing a distinct circuit.
+\method{} sits at the intersection of \emph{task-aware PTQ}~\citep{xiao2025tacq,huang2025slimllm}
+and \emph{monosemantic feature attribution}~\citep{dunefsky2024transcoders,bayat2025sas,crv2026}.
+Unlike \baseline{}, we do not treat weights as atomic units of task importance---we decompose MLP
+computation to mitigate polysemanticity before selecting outliers.
+Unlike steering and verification work, we do not seek human-readable explanations or runtime control
+for their own sake---we convert feature-level task signal into a weight mask with measurable
+downstream impact (+3.4\,pt mean Spider exec at 2-bit vs.\ \baseline{}, four seeds;
+\S\ref{sec:seed-robustness}).
+
+\begin{table}[t]
+  \centering
+  \caption{Positioning vs.\ closest prior work (all target low-bit LLM compression or control).}
+  \label{tab:positioning}
+  \small
+  \begin{tabular}{@{}p{0.22\linewidth}p{0.18\linewidth}p{0.28\linewidth}c@{}}
+    \toprule
+    Method & Goal & Feature basis & Weights? \\
+    \midrule
+    SPQR / AWQ / SliM-LLM & PTQ & Magnitude / Hessian / salience & \checkmark \\
+    \baseline{}~\citep{xiao2025tacq} & Task PTQ & CE (polysemantic) & \checkmark \\
+    SAS / SAE-TS~\citep{bayat2025sas,chalnev2024saets} & Steer & SAE latents & --- \\
+    CRV~\citep{crv2026} & Verify CoT & Transcoder latents & --- \\
+    \method{} (ours) & Task PTQ & Transcoder $\cap$ CE & \checkmark \\
+    \bottomrule
+  \end{tabular}
+\end{table}

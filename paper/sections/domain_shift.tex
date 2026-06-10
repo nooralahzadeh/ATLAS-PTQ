@@ -1,0 +1,31 @@
+\section{Domain-shift at 2-bit: calibration corpus controls}
+\label{sec:domain-shift}
+
+Standard GPTQ pipelines often calibrate on generic web text (e.g., C4).
+We isolate the effect of calibration \emph{domain} at fixed 2-bit width, mask budget (0.35\%),
+and \texttt{gptq.llama} implementation, using pre-computed masks without re-running saliency.
+
+\begin{table}[t]
+  \centering
+  \caption{2-bit Spider dev exec under native \texttt{gptq.llama} (128 samples, true-sequential).
+  Same quantizer; only mask identity and calibration corpus vary.}
+  \label{tab:domain-shift}
+  \small
+  \begin{tabular}{llr}
+    \toprule
+    Outlier mask & GPTQ calibration & Exec (\%) \\
+    \midrule
+    TaCQ MSG & C4 & 0.6 \\
+    TaCQ MSG & Spider (128) & 26.0 \\
+    B0 heavy (T-DSO) & C4 & 0.0 \\
+    \midrule
+    \multicolumn{2}{l}{TaCQ full pipeline (Spider contrastive 1360)} & 26.0 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:domain-shift} shows a \textbf{25+ point} collapse when switching MSG from Spider to
+C4 calibration at 2-bit, while the closing Spider-native control reproduces the full \baseline{}
+\textbf{26.0\%} baseline.
+Generic corpus calibration is therefore a confound in 2-bit task evaluations; task-matched
+calibration is necessary even when the outlier mask is held fixed.

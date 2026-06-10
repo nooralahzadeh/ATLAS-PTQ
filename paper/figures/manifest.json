@@ -1,0 +1,23 @@
+{
+  "figures": [
+    "jaccard_matrix.pdf",
+    "jaccard_cross_bitwidth.pdf",
+    "layer_disagreement.pdf",
+    "module_breakdown.pdf",
+    "layer_module_heatmap.pdf",
+    "layer_module_divergence.pdf",
+    "crossseed_stability.pdf",
+    "v3_dispute_sweep.pdf"
+  ],
+  "global_jaccard_2bit": {
+    "intersection": 11222517,
+    "union": 37632735,
+    "jaccard": 0.29821157032567525,
+    "kept_a": 24427626,
+    "kept_b": 24427626,
+    "a_only": 13205109,
+    "b_only": 13205109,
+    "prec_a_in_b": 0.4594190610254144,
+    "prec_b_in_a": 0.4594190610254144
+  }
+}
