@@ -1,0 +1,7 @@
+[Unit]
+Description=ATLAS-PTQ auto-snapshot + git push
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /capstor/scratch/cscs/fnoorala/ATLAS-PTQ/scripts/auto_push.sh

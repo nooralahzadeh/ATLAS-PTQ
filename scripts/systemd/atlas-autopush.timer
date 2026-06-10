@@ -1,0 +1,10 @@
+[Unit]
+Description=Run ATLAS-PTQ auto-push ~3x/day
+
+[Timer]
+# 11:00, 16:00, 21:00 local time; catch up if a trigger was missed (node asleep).
+OnCalendar=*-*-* 11,16,21:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
