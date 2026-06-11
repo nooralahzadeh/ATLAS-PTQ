@@ -113,6 +113,47 @@ Family name: **ATLAS** = AND-gated Task-circuit Loss-Aligned Saliency.
 - Internal pipeline names (tdsoV2mult, mult_free, ...) unchanged in code/logs;
   the mapping above is the paper-facing vocabulary.
 
+### ⚠️ MMLU_humanities truncation bug (2026-06-11) — circuit arms contaminated
+
+**Symptom.** Dict-free humanities masks (ALL bit-widths/seeds) kept **100%** of
+weights instead of 0.35% → near-FP16 engines (mult_free = align_free = 65.96%,
+FP16 = 66.0). Align loss was exactly 0 on every batch.
+
+**Root cause.** Our extractors tokenized with right-truncation at
+`max_len=2048`. Humanities 5-shot prompts run ~13k chars and the corruption
+edits the LAST question (first clean/corrupt divergence at 9.5k–14k chars ≈
+2.4k–3.5k tokens). After truncation clean == corrupted →
+`relu(a_clean − a_corr) = 0` → all-zero saliency → global threshold kept
+everything. Other tasks diverge at ~2k chars — inside the window — and are
+unaffected (all masks exactly 0.35%).
+
+**Why TaCQ doesn't hit this.** TaCQ has no input-corruption pathway at all —
+its "contrastive" is weight-space (`grad × (W − W_quant) × W`) and its
+dataloaders use `truncation=False` (drops whole samples, never cuts one). The
+clean/corrupt input contrast is OUR addition; the truncation choice was ours.
+
+**Transcoder arms also contaminated (silently).** Same tokenization; their
+align loss ≠ 0 only because transcoder decoders have a bias (target degenerates
+to a constant). Humanities transcoder masks were budget-correct but the circuit
+term was noise — likely why firm mult hum (47.5) trailed TaCQ (51.5).
+
+**Valid:** all GSM8k / MMLU_STEM / MMLU_social_sciences / Spider results; the
+dumb arms (weight/magnitude/random) and TaCQ firm humanities (TACQ repo path,
+untruncated). **Invalid:** every circuit-arm MMLU_humanities number (ablation
+ce/align/mult/align_free/mult_free, firm tdsoV2mult, dict-free).
+
+**Fix (applied, commit pending).** `tokenize_side`: `truncation=False` +
+loud error if batch exceeds `--max-len` (now 4096 in runners; TaCQ
+convention — calibration sees exactly the eval prompts). New
+`assert_pairs_differ` guard in both extractors. `apply_mask_budget` now raises
+if kept > 2× target (degenerate-tie guard).
+
+**Reruns:** humfix_A = 2519273 (abl w2 s0 heavy arms + firm w2 s0-2, hum only);
+humfix_B = 2519274 (gated: abl w3 s0 heavy, dict-free w2/w3 s1-2, firm w3
+s0-2).
+
+---
+
 ## Transcoder-variant coverage audit (2026-06-11)
 
 Decision: the paper KEEPS the transcoder version (T-DSO v2 mult) and tells the

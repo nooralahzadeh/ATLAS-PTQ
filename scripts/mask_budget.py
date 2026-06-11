@@ -59,6 +59,15 @@ def apply_mask_budget(saliency, mask_fraction, mode="global", layer_weights=None
         thresh = torch.kthvalue(flat, (total - k_total) + 1).values if k_total < total else flat.min()
         masks = {name: (s >= thresh).to(torch.bool) for name, s in saliency.items()}
         kept = sum(int(m.sum()) for m in masks.values())
+        # Degenerate-saliency guard: massive ties at the threshold (e.g. an
+        # all-zero saliency field) silently keep far more than the budget and
+        # produce near-FP16 engines. Fail loudly instead.
+        if kept > 2 * k_total:
+            raise ValueError(
+                f"degenerate saliency: kept {kept} weights vs target {k_total} "
+                f"({100.0 * kept / total:.4f}% vs {100.0 * mask_fraction:.4f}%); "
+                "threshold ties suggest the saliency signal is (near-)constant."
+            )
         return masks, kept
     if mode != "layer_adaptive":
         raise ValueError(f"Unknown mask budget mode: {mode}")

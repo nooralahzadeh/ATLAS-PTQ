@@ -87,11 +87,31 @@ def tokenize_side(tokenizer, texts, max_len, device):
         tokenizer.apply_chat_template(_record_to_messages(t), tokenize=False, add_generation_prompt=True)
         for t in texts
     ]
+    # No truncation (TaCQ convention: full prompts, drop nothing). Right-truncation
+    # silently cut the corruption out of long MMLU_humanities pairs (clean ==
+    # corrupted after tokenize => zero contrast => degenerate 100% masks).
     enc = tokenizer(
-        rendered, return_tensors="pt", padding="longest", truncation=True,
-        max_length=max_len, add_special_tokens=False,
+        rendered, return_tensors="pt", padding="longest", truncation=False,
+        add_special_tokens=False,
     )
+    n_tok = enc["input_ids"].shape[1]
+    if n_tok > max_len:
+        raise ValueError(
+            f"batch is {n_tok} tokens > max_len={max_len}; refusing to truncate "
+            f"(would corrupt the clean/corrupted contrast). Raise --max-len."
+        )
     return {k: v.to(device) for k, v in enc.items()}
+
+
+def assert_pairs_differ(clean, corr, context=""):
+    """Fail loudly if a whole batch tokenized identically on both sides."""
+    if clean["input_ids"].shape == corr["input_ids"].shape and torch.equal(
+        clean["input_ids"], corr["input_ids"]
+    ):
+        raise ValueError(
+            f"clean and corrupted prompts tokenized identically{context}; "
+            "contrastive circuit signal would be zero. Check pair construction."
+        )
 
 
 class TDSOController:
@@ -255,6 +275,7 @@ def main():
         clean = tokenize_side(tokenizer, [r["clean"] for r in batch], args.max_len, device)
         if need_align:
             corr = tokenize_side(tokenizer, [r["corrupted"] for r in batch], args.max_len, device)
+            assert_pairs_differ(clean, corr, context=f" (batch {bi})")
             ctrl.phase = "corr"
             ctrl.corr_summ = {}
             ctrl.mask = corr["attention_mask"].bool()

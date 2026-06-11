@@ -10,7 +10,7 @@ for _p in (str(_SCRIPTS), str(_EXTRACT)):
     if _p not in sys.path: sys.path.insert(0, _p)
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from mask_budget import apply_mask_budget
-from extract_tdso_v2_h200 import (TARGET_SUFFIXES, configure_h200_backend, is_target, load_corrupt_weights, load_pairs, rtn_dequantize, tokenize_side,)
+from extract_tdso_v2_h200 import (TARGET_SUFFIXES, assert_pairs_differ, configure_h200_backend, is_target, load_corrupt_weights, load_pairs, rtn_dequantize, tokenize_side,)
 class NativeNeuronController:
     def __init__(self, source: str, quantile: float) -> None:
         self.source = source; self.quantile = quantile; self.phase = "idle"; self.mask = None
@@ -109,6 +109,7 @@ def main() -> None:
         clean = tokenize_side(tokenizer, [r["clean"] for r in batch], args.max_len, device)
         if need_align:
             corr = tokenize_side(tokenizer, [r["corrupted"] for r in batch], args.max_len, device)
+            assert_pairs_differ(clean, corr, context=f" (batch {bi})")
             ctrl.phase = "corr"; ctrl.corr_summ = {}; ctrl.inter = {}; ctrl.mask = corr["attention_mask"].bool()
             with torch.no_grad(): model(input_ids=corr["input_ids"], attention_mask=corr["attention_mask"])
         if need_align:

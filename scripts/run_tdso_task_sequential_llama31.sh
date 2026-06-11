@@ -20,7 +20,7 @@ for task in "${TASKS[@]}"; do
     log "skip Spider (SKIP_SPIDER_IF_EXISTS=1)"; continue
   fi
   TASK="$task" SEED="$SEED" GPU="$GPU" WBITS="$WBITS" COMBINE="$COMBINE" \
-    EXTRACT_BS="${EXTRACT_BS:-2}" MMLU_MAX_LEN="${MMLU_MAX_LEN:-2048}" \
+    EXTRACT_BS="${EXTRACT_BS:-2}" MMLU_MAX_LEN="${MMLU_MAX_LEN:-4096}" \
     FORCE_RECOMPUTE="$FORCE_RECOMPUTE" \
     bash "$ROOT/scripts/run_tdso_v2_task_conditioned_llama31.sh"
 done
