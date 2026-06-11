@@ -102,6 +102,37 @@ The bug is the same one patched in `scripts/run_downstream_seed_llama31.sh`
 
 ---
 
+## Transcoder-variant coverage audit (2026-06-11)
+
+Decision: the paper KEEPS the transcoder version (T-DSO v2 mult) and tells the
+discovery story: T-DSO wins → ablation dissects it → dict-free distills it.
+Intro/abstract/results restructured accordingly (Step 1/2/3 narrative).
+
+**Complete ✓**
+- Spider 2b: mult 4 seeds (29.4±2.7), TaCQ 4 seeds (26.5±2.0), v1 align s0.
+- TaCQ firm 2b + 3b: all 4 tasks × seeds 0–2 (genuine 2-bit).
+- mult firm 3b: seeds 0–1 × 4 tasks.
+- Ablation 2b s0 ce/align/mult: GSM8k + MMLU_STEM.
+
+**In flight (jobs)**
+- 2517684 `tdso2b_fix` — rebuild firm mult 2b (GSM8k s0–2, MMLU s0–1) at
+  genuine `--wbits 2`. First numbers: GSM8k s0 raw 29.8%, MMLU_hum s0 47.5%.
+- 2517959 `tdso_w2s2` — mult 2b seed-2 MMLU gap.
+- 2518045 `tdso_w3s2` — mult 3b seed-2, all 4 tasks (fills Table downstream3
+  to 3 seeds).
+- 2518046 `abl_w2_humsoc` — ablation 2b s0 arms {ce,align,mult,weight,
+  magnitude,random} on MMLU_humanities + social_sciences (completes the
+  8-arm × 4-task 2-bit grid together with dfree jobs).
+- 2518047 `abl_w3_s0` — ablation 3b s0, same 6 arms × all 4 tasks (direct
+  controlled evidence for the "low-bit phenomenon" claim).
+- 2517952–2517958 `dfree_*` — dict-free arms, 2b+3b, seeds 0–2, 4 tasks.
+
+**Still missing after these land**
+- Spider 3b multi-seed (s0 only: TaCQ 64.8 / v1 65.0 / mult 66.2).
+- align (v1) multi-seed beyond Spider — secondary, ablation covers s0.
+
+---
+
 ## TODO / pending firm numbers
 
 - MMLU_STEM 2b: rerun arms {random, weight, magnitude, ce, align, mult}.

@@ -30,24 +30,27 @@ Low-bit post-training quantization (PTQ) compresses large language models but
 often destroys task-specific capabilities when only a tiny fraction of weights
 can remain in full precision. Task-Circuit Quantization (\baseline{}) selects
 FP16 outlier weights using contrastive gradients on cross-entropy loss,
-treating the model as a black box. We propose \emph{conjunctive task-circuit
-saliency}: a weight is protected only if it is salient \emph{both} to the task
-loss \emph{and} to the activation circuit that distinguishes clean from
-corrupted task inputs. We instantiate the circuit term in two bases: sparse
-transcoder features (\method{}) and---crucially---the model's \emph{own MLP
-neurons} (\methodfree{}), which requires no external dictionary and applies to
-any transformer. A controlled saliency-source ablation on Llama-3.1-8B-Instruct
-(matched 0.35\% FP16 budget, identical GPTQ pipeline, only the saliency signal
-varies) shows at 2-bit: (i) circuit-informed selection far exceeds magnitude,
-quantization-error, and random controls; (ii) the conjunction beats either of
-its parts (GSM8K: 28.7\% vs.\ CE 25.4\% and circuit-only 25.6\%); and (iii) the
-dictionary is \emph{optional}: \methodfree{} recovers most of the transcoder
-gain on GSM8K (26.5\%) and surpasses all transcoder arms on MMLU-STEM (44.2\%
-vs.\ 38.9\%). At 3-bit all task-conditioned methods converge, identifying
+treating the model as a black box. We first propose \method{}
+(Transcoder-guided Dynamic Sparse Overlay), which attributes quantization
+sensitivity through sparse, approximately monosemantic transcoder features and
+\emph{intersects} this circuit signal with standard CE saliency. Under a fixed
+0.35\% outlier budget matched to \baseline{} on Llama-3.1-8B-Instruct,
+\method{} improves Spider text-to-SQL execution accuracy by +2.9 points on
+average over four paired calibration seeds (29.4\% vs.\ 26.5\%) and GSM8K
+2-bit accuracy from 25.4\% to 28.7\%. We then ask \emph{why} it works. A
+controlled saliency-source ablation---everything matched, only the
+weight-ranking signal varies across eight arms---dissects the method and
+yields three findings: (i) task-circuit information dominates magnitude,
+quantization-error, and random placement (by 10--26 points at 2-bit); (ii) the
+\emph{conjunction} of task loss and task circuit beats either signal alone;
+and (iii) the transcoder itself is \emph{not} the active ingredient. Replacing
+it with the model's \emph{own MLP neurons} as the feature basis
+(\methodfree{}) recovers most of the gain on GSM8K (26.5\%) and surpasses all
+transcoder arms on MMLU-STEM (44.2\% vs.\ 38.9\%)---turning a method gated on
+external interpretability artifacts into one that applies to any transformer
+out-of-the-box. At 3-bit all task-conditioned methods converge, identifying
 conjunctive saliency as a distinctly \emph{low-bit} phenomenon: where to spend
-the FP16 budget matters most exactly when the budget is harshest. On Spider
-text-to-SQL, \method{} v2~mult improves execution accuracy by +2.9 points on
-average over four paired calibration seeds (29.4\% vs.\ \baseline{} 26.5\%).
+the FP16 budget matters most exactly when the budget is harshest.
 \end{abstract}
 
 \input{sections/introduction}

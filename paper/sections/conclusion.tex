@@ -2,10 +2,13 @@
 \label{sec:conclusion}
 
 Low-bit PTQ forces a choice about which tiny fraction of weights must remain
-in full precision. We showed that the right selection signal is a
-\emph{conjunction}: protect a weight only if it is salient to the task loss
-\emph{and} to the activation circuit separating clean from corrupted task
-inputs.
+in full precision. We started from an interpretability-guided answer---route
+saliency through sparse transcoder features and intersect with the task loss
+(\method{})---which beats \baseline{} at matched budget. Dissecting it with a
+controlled ablation revealed the general principle underneath: protect a
+weight only if it is salient to the task loss \emph{and} to the activation
+circuit separating clean from corrupted task inputs, where the circuit can be
+defined in the model's \emph{own} feature basis (\methodfree{}).
 
 \paragraph{Three takeaways.}
 \textbf{(1) The conjunction is the active ingredient.} In a controlled
