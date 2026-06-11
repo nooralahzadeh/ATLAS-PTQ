@@ -154,6 +154,25 @@ s0-2).
 
 ---
 
+## Paired-bootstrap significance (2026-06-11, seed 0, 10k iterations)
+
+**GSM8k 2-bit (n=1319 examples, per-example pairing):**
+- ATLAS-T vs TaCQ(ce): +3.26pp, CI [+0.91, +5.61], **p=0.005** ✓ significant
+- ATLAS-N vs TaCQ(ce): +1.14pp, CI [-1.44, +3.64], p=0.196 — not significant
+- ATLAS-T vs ATLAS-N:  +2.12pp, CI [-0.45, +4.70], p=0.056 — borderline
+
+**MMLU-STEM 2-bit (n=18 subjects, cluster bootstrap):**
+- ATLAS-T vs TaCQ(ce): -1.96pp, CI [-4.51, +0.59], p=0.066 — ATLAS-T LOSES
+- ATLAS-N vs TaCQ(ce): +1.66pp, CI [-1.96, +5.09], p=0.179 — not significant
+- ATLAS-N vs ATLAS-T:  +3.61pp, CI [+0.12, +6.92], **p=0.022** ✓ significant
+
+**Key takeaway for paper claims:** the only *significant* paired gaps at seed 0
+are ATLAS-T > TaCQ on GSM8k and ATLAS-N > ATLAS-T on STEM. The rest need
+multi-seed pooling (concatenated per-example vectors) or per-example MMLU dumps
+to resolve. Do NOT claim ATLAS-N > TaCQ on GSM8k — it's noise (p=0.20).
+
+---
+
 ## Dict-free multi-seed harvest (2026-06-11 afternoon, jobs 2517952–58)
 
 ATLAS-N (mult_free) / align_free, ablation protocol, humanities EXCLUDED
