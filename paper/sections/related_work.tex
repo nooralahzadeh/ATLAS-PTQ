@@ -27,7 +27,7 @@ We treat \baseline{} as the primary baseline because it shares our GPTQ stack, $
 model, outlier fraction (0.35\%), and Spider evaluation protocol.
 However, \baseline{} scores \emph{polysemantic weights} via CE on logits; \method{} intersects CE
 with saliency routed through a monosemantic transcoder basis (\S\ref{sec:method}).
-Empirically, our v2 \texttt{mult} mask overlaps only 30\% (Jaccard $J{=}0.298$) with \baseline{} at the same
+Empirically, our \method{} mask overlaps only 30\% (Jaccard $J{=}0.298$) with \baseline{} at the same
 budget (\S\ref{sec:mask-overlap}), showing the gain is not a minor reranking within \baseline{}'s
 weight pool.
 

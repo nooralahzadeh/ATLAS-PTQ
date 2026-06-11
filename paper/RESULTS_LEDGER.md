@@ -102,6 +102,17 @@ The bug is the same one patched in `scripts/run_downstream_seed_llama31.sh`
 
 ---
 
+## Method naming (2026-06-11)
+
+Family name: **ATLAS** = AND-gated Task-circuit Loss-Aligned Saliency.
+- **ATLAS-T** = transcoder feature basis (internal: T-DSO v2 `mult`,
+  engines `tdsoV2mult_*`).
+- **ATLAS-N** = native MLP-neuron basis, dictionary-free (internal:
+  `mult_free`).
+- Circuit-only arms (`align` / `align_free`) stay descriptive, no branding.
+- Internal pipeline names (tdsoV2mult, mult_free, ...) unchanged in code/logs;
+  the mapping above is the paper-facing vocabulary.
+
 ## Transcoder-variant coverage audit (2026-06-11)
 
 Decision: the paper KEEPS the transcoder version (T-DSO v2 mult) and tells the

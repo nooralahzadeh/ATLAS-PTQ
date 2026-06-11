@@ -1,4 +1,4 @@
-\section{Method: Conjunctive Task-Circuit Saliency}
+\section{Method: \family{} --- AND-Gated Task-Circuit and Loss-Aligned Saliency}
 \label{sec:method}
 
 We keep the \baseline{} mixed-precision quantization pipeline (GPTQ with
@@ -106,7 +106,7 @@ suffices---which is exactly what we observe (\S\ref{sec:results-3bit}).
 \subsection{Anchored union: consensus core and dispute region}
 \label{sec:method-anchored}
 
-Empirically, \baseline{} and v2~mult agree on only ${\sim}46$--$50\%$ of the
+Empirically, \baseline{} and \method{} agree on only ${\sim}46$--$50\%$ of the
 FP16 budget ($J{\approx}0.30$--$0.33$; \S\ref{sec:analysis-overlap}). We
 formalize a two-region policy that never renegotiates consensus outliers and
 allocates only the remaining budget on the method-disputed mass. Let $\Omega$

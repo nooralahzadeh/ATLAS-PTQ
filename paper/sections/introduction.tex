@@ -41,8 +41,10 @@ features before ranking outliers.
 
 \paragraph{Step 1 --- \method{}: route saliency through a monosemantic basis.}
 Our starting point is interpretability-guided: if CE gradients on weights are
-polysemantic, attribute through a basis that is not. \method{}
-(Transcoder-guided Dynamic Sparse Overlay) uses sparse TopK
+polysemantic, attribute through a basis that is not. We call the resulting
+family \family{} (\emph{AND-gated Task-circuit Loss-Aligned Saliency}); its
+first instantiation, \method{} (\family{} with a \textbf{T}ranscoder basis),
+uses sparse TopK
 transcoders~\citep{dunefsky2024transcoders} to identify features that activate
 preferentially on task-faithful versus corrupted inputs, back-propagates a
 feature-filtered reconstruction objective, and \emph{intersects} the resulting
@@ -67,8 +69,9 @@ model's \emph{own MLP neurons} with \texttt{down\_proj} as the decoder.
 
 \paragraph{Step 3 --- the distilled method: \methodfree{}.}
 The ablation delivers a clean dissection: the conjunction is the active
-ingredient, and the dictionary is not. The native-basis conjunction
-(\methodfree{}) recovers most of \method{}'s gain on GSM8K and surpasses it on
+ingredient, and the dictionary is not. The native-basis conjunction,
+\methodfree{} (\family{} with the model's \textbf{N}ative MLP-neuron basis),
+recovers most of \method{}'s gain on GSM8K and surpasses it on
 MMLU-STEM, while requiring no external dictionary, SAE, or transcoder---the
 method applies out-of-the-box to any transformer. What began as a
 transcoder-dependent technique ends as a general principle: \emph{protect a

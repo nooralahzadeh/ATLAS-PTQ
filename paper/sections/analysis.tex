@@ -4,7 +4,7 @@
 \subsection{Mask overlap: a different circuit, not a reranking}
 \label{sec:analysis-overlap}
 
-Both \method{} (v2~mult) and \baseline{} keep exactly 0.35\% of the 224
+Both \method{} and \baseline{} keep exactly 0.35\% of the 224
 attn+MLP weight tensors---24.4M FP16 outliers each---yet they select largely
 disjoint subsets. Against \baseline{} 2-bit (seed-matched), only 46\% of
 \method{} outliers overlap ($J{=}0.298$); at 3-bit the overlap is 50\%
@@ -27,7 +27,7 @@ late layers agree more. The mid-stack is where task-specific schema and
 compositional structure are processed in Llama-family models.
 
 \paragraph{Seed sensitivity vs.\ method divergence.}
-Cross-seed Jaccard among v2~mult masks is 0.995--0.997 (only ${\sim}36$--56k
+Cross-seed Jaccard among \method{} masks is 0.995--0.997 (only ${\sim}36$--56k
 of 24.4M kept weights differ per seed pair), vs.\ 0.983--0.985 for \baseline{}
 (${\sim}187$--214k). Cross-method $J{=}0.298$. Methods select different
 circuits, not different seeds of the same circuit; \baseline{}'s polysemantic

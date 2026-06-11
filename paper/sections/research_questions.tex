@@ -7,7 +7,7 @@ task circuit identify a better outlier set than either signal alone at the
 same FP16 budget?
 \emph{Status:} Yes at 2-bit. Ablation (Table~\ref{tab:ablation}): mult 28.7\%
 vs.\ ce 25.4\% / align 25.6\% on GSM8K; mult$_{\text{free}}$ 44.2\% vs.\ ce
-41.3\% / align$_{\text{free}}$ 42.6\% on MMLU-STEM. Spider: v2~mult
+41.3\% / align$_{\text{free}}$ 42.6\% on MMLU-STEM. Spider: \method{}
 $+2.9$\,pp mean over four paired seeds (Table~\ref{tab:spider}).
 
 \paragraph{RQ2: Is an external dictionary necessary?}
@@ -31,9 +31,9 @@ At what quantization severity does saliency choice matter?
 \paragraph{RQ5: Feature--weight alignment under superposition.}
 Do task-discriminative circuit features map to distinct weight subsets from CE
 saliency?
-\emph{Status:} $J{=}0.298$ (2-bit) / 0.331 (3-bit) between v2~mult and
+\emph{Status:} $J{=}0.298$ (2-bit) / 0.331 (3-bit) between \method{} and
 \baseline{}; mid layers 4--14 and MLP projections diverge most; cross-seed
-stability $J{=}0.995$--0.997 (v2) vs.\ 0.983--0.985 (\baseline{})
+stability $J{=}0.995$--0.997 (\method{}) vs.\ 0.983--0.985 (\baseline{})
 (\S\ref{sec:analysis-overlap}).
 
 \paragraph{RQ6: Calibration source.}

@@ -13,11 +13,14 @@
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 
 % --- Method name macros ------------------------------------------------------
-\newcommand{\method}{T-DSO}        % transcoder-guided variant
-\newcommand{\methodfree}{T-DSO$_{\text{free}}$} % dictionary-free variant (native MLP basis)
+% ATLAS = AND-gated Task-circuit Loss-Aligned Saliency (the method family).
+\newcommand{\family}{ATLAS}
+\newcommand{\method}{ATLAS-T}     % transcoder feature basis (ex T-DSO v2 mult)
+\newcommand{\methodfree}{ATLAS-N} % native MLP-neuron basis, dictionary-free
 \newcommand{\baseline}{TaCQ}
 
-\title{Conjunctive Task-Circuit Saliency for Low-Bit LLM Quantization}
+\title{\family{}: AND-Gated Task-Circuit and Loss-Aligned Saliency\\
+for Low-Bit LLM Quantization}
 
 \author{Anonymous Authors\\
 \texttt{anonymous@domain.edu}}
@@ -30,10 +33,12 @@ Low-bit post-training quantization (PTQ) compresses large language models but
 often destroys task-specific capabilities when only a tiny fraction of weights
 can remain in full precision. Task-Circuit Quantization (\baseline{}) selects
 FP16 outlier weights using contrastive gradients on cross-entropy loss,
-treating the model as a black box. We first propose \method{}
-(Transcoder-guided Dynamic Sparse Overlay), which attributes quantization
-sensitivity through sparse, approximately monosemantic transcoder features and
-\emph{intersects} this circuit signal with standard CE saliency. Under a fixed
+treating the model as a black box. We propose \family{} (\emph{AND-gated
+Task-circuit Loss-Aligned Saliency}): protect a weight only if it is salient
+both to the task loss and to the task circuit. Our first instantiation,
+\method{}, attributes quantization sensitivity through sparse, approximately
+monosemantic transcoder features and \emph{intersects} this circuit signal
+with standard CE saliency. Under a fixed
 0.35\% outlier budget matched to \baseline{} on Llama-3.1-8B-Instruct,
 \method{} improves Spider text-to-SQL execution accuracy by +2.9 points on
 average over four paired calibration seeds (29.4\% vs.\ 26.5\%) and GSM8K
