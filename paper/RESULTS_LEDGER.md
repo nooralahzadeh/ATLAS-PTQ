@@ -154,6 +154,35 @@ s0-2).
 
 ---
 
+## Dict-free multi-seed harvest (2026-06-11 afternoon, jobs 2517952–58)
+
+ATLAS-N (mult_free) / align_free, ablation protocol, humanities EXCLUDED
+(truncation bug, reruns in flight). Acc %:
+
+**2-bit** (s0 / s1 / s2):
+- GSM8k    align_free 22.9 / 15.8 / 14.6 ; mult_free 26.5 / 17.2 / (gap job 2519430 — MTB token race killed GPTQ; mask intact)
+- STEM     align_free 42.6 / 39.3 / 39.2 ; mult_free 44.2 / 40.8 / 40.8
+- soc_sci  align_free 52.6 / 50.7 / 54.2 ; mult_free 55.9 / 54.1 / 50.8
+
+**3-bit** (s0 / s1 / s2):
+- GSM8k    align_free 59.7 / 57.7 / 57.9 ; mult_free 57.9 / 59.6 / 56.3
+- STEM     align_free 53.8 / 54.4 / 53.3 ; mult_free 54.1 / 53.0 / 53.7
+- soc_sci  align_free 71.7 / 72.0 / 72.8 ; mult_free 72.3 / 73.0 / 72.4
+
+**Firm tdsoV2mult 3-bit seed 2 (2518045):** GSM8k 57.6, STEM 54.0,
+soc_sci 73.2 (hum 61.1 INVALID → humfix_B). Table downstream3 now 3 seeds.
+
+⚠️ **Heads-up for paper claims:** dict-free 2-bit seed variance is large
+(GSM8k mult_free 26.5 vs 17.2; STEM s0 44.2 vs s1/s2 40.8). The s0-only
+"ATLAS-N surpasses all transcoder arms on STEM" claim needs multi-seed
+qualification once the grid completes. 3-bit convergence story is clean.
+
+**humfix_A health check:** new no-truncation path verified — ce hum mask
+exactly 0.3500%, transcoder align loss now varies per batch (1e5-range, was
+constant 3.523e5), dict-free align nonzero (was 0.0).
+
+---
+
 ## Transcoder-variant coverage audit (2026-06-11)
 
 Decision: the paper KEEPS the transcoder version (T-DSO v2 mult) and tells the
