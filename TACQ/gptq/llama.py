@@ -25,8 +25,8 @@ def get_llama(model):
     torch.nn.init.uniform_ = skip
     torch.nn.init.normal_ = skip
     from transformers import LlamaForCausalLM
-    from peft import AutoPeftModelForCausalLM
     if model.endswith("lora_model"):
+        from peft import AutoPeftModelForCausalLM
         model = AutoPeftModelForCausalLM.from_pretrained(model, torch_dtype='auto')
         model = model.merge_and_unload()
     elif "Qwen" in model:

@@ -1,0 +1,102 @@
+\section{Introduction}
+\label{sec:intro}
+
+Large language models (LLMs) are increasingly deployed under strict memory and
+latency budgets. Post-training quantization (PTQ) maps FP16 weights to 2--4
+bits without retraining, but aggressive quantization---especially at 2
+bits---can collapse performance on structured tasks such as text-to-SQL, math
+reasoning, and code generation. Mixed-precision PTQ mitigates this by keeping a
+small set of outlier weights in FP16 while quantizing the
+rest~\citep{dettmers2022llmint8,frantar2023gptq,dettmers2023spqr}.
+
+\paragraph{The core problem.}
+Outlier selection is a \emph{localization} problem: which weights matter for a
+downstream task once quantization noise is injected? Uniform salience
+heuristics (magnitude, activation scale) ignore task structure. Calibration on
+generic corpora misses task-specific circuits. Even strong mixed-precision
+methods struggle in the 2-bit regime, where the allowed FP16 budget (often
+$<$1\% of weights) must be spent with surgical precision.
+
+\paragraph{Polysemantic weights vs.\ monosemantic features.}
+A separate challenge is \emph{where} in the network task signal lives.
+Individual MLP neurons and their connecting weights are typically
+polysemantic---each participates in many unrelated computations via
+superposition~\citep{elhage2021mathematical,bricken2023monosemanticity}. A
+gradient on cross-entropy therefore reflects a mixture of all roles a weight
+plays across the vocabulary and prompt positions, not a single task-specific
+mechanism. \baseline{} inherits this ambiguity: although it conditions on task
+calibration data, saliency is still computed directly on physical weights from
+CE gradients, so the selected outliers may protect broadly useful directions
+rather than the sparse features that implement SQL grounding, aggregation, or
+schema linking.
+
+\paragraph{Task-Circuit Quantization (\baseline{}).}
+\citet{xiao2025tacq} frame outlier selection as automated circuit discovery for
+PTQ. They score each weight by combining (i) contrastive gradients on task
+calibration data, (ii) expected weight change under quantization
+$\Delta W = W - W_{\text{quant}}$, and (iii) a global top-$p$ mask under a
+fixed memory budget. Crucially, \baseline{} operates in weight space on
+polysemantic gradient signal; it does not decompose MLP computation into
+features before ranking outliers.
+
+\paragraph{Our approach: conjunctive task-circuit saliency.}
+We propose to protect a weight only if it passes \emph{two} independent tests:
+it must be salient to the task loss (CE gradient, as in \baseline{}) \emph{and}
+salient to the \emph{activation circuit} that separates clean from corrupted
+task inputs. The conjunction is implemented as a geometric mean of the two
+saliency fields (\S\ref{sec:method}), so a weight scoring high on only one
+signal is demoted. We instantiate the circuit term in two feature bases:
+\begin{itemize}
+  \item \textbf{\method{} (transcoder basis):} sparse, approximately
+        monosemantic transcoder features~\citep{dunefsky2024transcoders}
+        identify task-discriminative directions; saliency is back-propagated
+        from a feature-filtered reconstruction objective.
+  \item \textbf{\methodfree{} (native basis, dictionary-free):} the model's
+        \emph{own MLP neurons} serve as the feature basis, with the
+        \texttt{down\_proj} matrix as the decoder. No external dictionary, SAE,
+        or transcoder is required---the method applies out-of-the-box to any
+        transformer.
+\end{itemize}
+
+\paragraph{Why a controlled ablation.}
+Mixed-precision results are easy to over-interpret: gains can come from the
+saliency signal, the mask budget, the quantizer, or calibration noise. We
+therefore run a \emph{saliency-source ablation} in which everything is held
+fixed (model, 0.35\% budget, contrastive pairs, GPTQ, evaluation) and only the
+signal that ranks weights varies across eight arms: random, weight magnitude
+$|W|$, magnitude $\times$ quantization error $|W|\cdot|\Delta W|$, CE
+($\approx$\baseline{}), circuit-only (transcoder and native bases), and the
+conjunction (both bases).
+
+\paragraph{Contributions.}
+\begin{itemize}
+  \item We introduce \emph{conjunctive task-circuit saliency} for PTQ outlier
+        selection, and show the conjunction---not either signal alone---is the
+        active ingredient at 2-bit (GSM8K: 28.7\% vs.\ CE 25.4\% / circuit-only
+        25.6\%; \S\ref{sec:ablation}).
+  \item We make the method \textbf{dictionary-free}: \methodfree{} uses the
+        model's own MLP neurons as the circuit basis, recovers most of the
+        transcoder variant's gain on GSM8K, and \emph{surpasses} it on
+        MMLU-STEM (44.2\% vs.\ 38.9\%), removing the dependency on external
+        interpretability artifacts.
+  \item We show task-circuit selection dominates magnitude-, error-, and
+        random-based controls by 10--26 points at 2-bit, and that all
+        task-conditioned methods converge at 3-bit: conjunctive saliency is a
+        \emph{low-bit} phenomenon (\S\ref{sec:results-3bit}).
+  \item We provide a fair head-to-head protocol on Llama-3.1-8B-Instruct:
+        identical quantizer (GPTQ), outlier fraction (0.35\%), calibration
+        size, and evaluation suites. On Spider 2-bit, \method{} v2~mult
+        improves execution accuracy by +2.9 points on average over four paired
+        seeds, with interpretability analysis showing low mask overlap
+        ($J{=}0.30$) and causal knockout ($-29$\,pt).
+  \item We release code, contrastive calibration sets, and reproduction
+        scripts for \baseline{}, \method{}, and \methodfree{} masks.
+        \todo{anonymize for submission}
+\end{itemize}
+
+\paragraph{Paper roadmap.}
+Section~\ref{sec:encoded-used} gives the theoretical framing;
+Section~\ref{sec:rqs} states research questions;
+Section~\ref{sec:related} situates our work;
+Section~\ref{sec:method} describes the algorithm and the dictionary-free
+variant; Sections~\ref{sec:setup}--\ref{sec:results} cover setup and findings.

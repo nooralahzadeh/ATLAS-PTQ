@@ -1,0 +1,59 @@
+\section{Hyperparameters}
+\label{app:hyperparams}
+
+\begin{table}[h]
+\centering
+\caption{Shared hyperparameters across \baseline{}, \method{}, and
+\methodfree{}.}
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+Outlier fraction & 0.35\% (global top-$k$) \\
+Calibration pairs & 128 (Spider track: 1360) \\
+Max sequence length & 2048 \\
+Feature threshold quantile & 0.95 (per-example, positive $\Delta a$) \\
+Transcoder TopK & 128 (\method{} only) \\
+Native feature basis & MLP intermediate, $d_{\text{mlp}}{=}14{,}336$ (\methodfree{}) \\
+GPTQ & true-sequential, 128 samples \\
+$\Delta W$ reference & RTN $b$-bit (ablation) / GPTQ corrupt (Spider) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Contrastive corruption schema}
+\label{app:corruptions}
+Spider: schema swaps, wrong-SQL completions. GSM8K: corrupted chain-of-thought
+with wrong intermediate steps and final answer. MMLU: wrong answer-choice
+completions under the same 5-shot prompt.
+\todo{full schema table from data\_prep\_contrastive.py}
+
+\section{Saliency-source ablation: arm definitions}
+\label{app:arms}
+All arms share the mask format, 0.35\% global top-$k$ budget, GPTQ, and
+evaluation. \textbf{random}: uniform random scores. \textbf{weight}: $|W|$.
+\textbf{magnitude}: $|W|\cdot|\Delta W_{\text{RTN-}b\text{bit}}|$.
+\textbf{ce}: $|W|\cdot|\Delta W|\cdot g_{\text{CE}}$. \textbf{align} /
+\textbf{align$_{\text{free}}$}: $|W|\cdot|\Delta W|\cdot g_{\text{align}}$ in
+the transcoder / native basis. \textbf{mult} / \textbf{mult$_{\text{free}}$}:
+Eq.~\ref{eq:mult} in the transcoder / native basis.
+
+\section{Transcoder-native feature audit}
+\label{app:audit}
+Per-layer task-feature density (\texttt{meta.layer\_feature\_density}) peaks in
+mid layers 4--14, consistent with the layer-wise weight disagreement
+(\S\ref{sec:analysis-overlap}). Top-K feature ranking by cumulative
+clean$-$corrupt activation $\Delta a$ and manual labeling templates are
+shipped with the code. \todo{populate manual labels}
+
+\section{Additional results}
+\label{app:additional}
+\todo{Full Spider difficulty breakdown; complete dispute-sweep 2-bit row;
+RTN vs.\ GPTQ $\Delta W$ ablation; cross-seed Jaccard tables.}
+
+\section{Broader impact}
+\label{app:impact}
+Compression lowers the cost of deploying capable LLMs, which is dual-use in
+the usual ways. Our interpretability-guided selection does not introduce new
+capability risks beyond standard PTQ; it may improve auditability by making
+the protected task circuit explicit.

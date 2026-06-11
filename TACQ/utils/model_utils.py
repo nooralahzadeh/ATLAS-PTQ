@@ -1,9 +1,11 @@
 import os
-from peft import AutoPeftModelForCausalLM
+# NOTE: `peft` is only needed for the lora/qlora load branches below. Import it
+# lazily there so the fp16 `quantized_model` eval path does not hard-depend on
+# peft being installed in the active venv (it is absent from llama31_venv).
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 
-model_loadstring_dict = {"Qwen2.5-32B-Instruct": "Qwen", "Qwen2.5-7B": "Qwen", "Qwen2.5-7B-Instruct": "Qwen", "gemma-2b": "google", "gpt2-large": "openai-community", "Llama-2-7b-hf": "meta-llama", "Meta-Llama-3-8B-Instruct": "meta-llama", "Meta-Llama-3-8B": "meta-llama", "Mistral-7B-v0.3": "mistralai", "Meta-Llama-3-70B-Instruct": "meta-llama"}
+model_loadstring_dict = {"Qwen2.5-32B-Instruct": "Qwen", "Qwen2.5-7B": "Qwen", "Qwen2.5-7B-Instruct": "Qwen", "gemma-2b": "google", "gpt2-large": "openai-community", "Llama-2-7b-hf": "meta-llama", "Meta-Llama-3-8B-Instruct": "meta-llama", "Meta-Llama-3-8B": "meta-llama", "Mistral-7B-v0.3": "mistralai", "Meta-Llama-3-70B-Instruct": "meta-llama", "Meta-Llama-3.1-8B-Instruct": "unsloth", "Meta-Llama-3.1-8B": "unsloth"}
 
 def load_model(engine, checkpoints_dir, device_map = "auto", full_32_precision=False, brainfloat=False):
     """Can handle many types of models."""
@@ -35,11 +37,13 @@ def load_model(engine, checkpoints_dir, device_map = "auto", full_32_precision=F
         base_model_name = engine.split("_")[0]
         loadstring = model_loadstring_dict[base_model_name] + "/" +  base_model_name
         tokenizer = AutoTokenizer.from_pretrained(loadstring)
+        from peft import AutoPeftModelForCausalLM
         model = AutoPeftModelForCausalLM.from_pretrained(os.path.join(checkpoints_dir, engine), quantization_config=bnb_config, device_map=device_map)
     elif engine.endswith("lora_model"):  
         base_model_name = engine.split("_")[0]
         loadstring = model_loadstring_dict[base_model_name] + "/" +  base_model_name
         tokenizer = AutoTokenizer.from_pretrained(loadstring)
+        from peft import AutoPeftModelForCausalLM
         model = AutoPeftModelForCausalLM.from_pretrained(os.path.join(checkpoints_dir, engine), device_map=device_map)
         print(f"Model loaded: {type(model)}")
     else:

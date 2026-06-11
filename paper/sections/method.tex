@@ -1,0 +1,133 @@
+\section{Method: Conjunctive Task-Circuit Saliency}
+\label{sec:method}
+
+We keep the \baseline{} mixed-precision quantization pipeline (GPTQ with
+per-weight bit-width mask) and replace only the saliency extraction stage.
+
+\paragraph{Setup.}
+Model $f_\theta$ with weights $\theta$; uniform $b$-bit reference
+$W_{b\text{bit}}$ (RTN or GPTQ on task calibration data); outlier budget $k$
+(fraction of parameters kept in FP16, 0.35\% throughout). Contrastive pairs
+$(x^+, x^-)$ where $x^+$ is task-faithful and $x^-$ is corrupted (schema
+errors, wrong CoT, wrong answer choice, etc.).
+
+\paragraph{\baseline{} saliency (review).}
+Accumulate $|\nabla_W \mathcal{L}_{\text{CE}}(x^+)|$ over calibration, multiply
+by $|W| \cdot |W - W_{b\text{bit}}|$, global top-$k$
+selection~\citep{xiao2025tacq}. Gradients are taken w.r.t.\ polysemantic
+weight tensors: each $W$ may contribute to many superposed features, and
+$\mathcal{L}_{\text{CE}}$ mixes all roles active at each token.
+
+\subsection{Circuit saliency in a feature basis}
+\label{sec:method-circuit}
+
+The circuit term inserts a feature-space bottleneck before weight saliency.
+For each layer $\ell$, an encoder maps the MLP computation to a code
+$f \in \mathbb{R}^{F_\ell}$; a decoder $D_\ell$ maps codes back to the MLP
+output space. We rank \emph{task-discriminative} features via contrastive
+activation: on corrupted input $x^-$ (no grad) record
+$a^{\text{corr}}_{\ell,f} = \max_t f_{\ell,t,f}$; on clean input $x^+$ (with
+grad) compute $a^{\text{clean}}_{\ell,f}$ analogously. Task features satisfy
+\begin{equation}
+\Delta a_\ell \;=\; \mathrm{ReLU}\!\left(a^{\text{clean}}_\ell - a^{\text{corr}}_\ell\right) \;>\; \tau_\ell,
+\end{equation}
+with $\tau_\ell$ the per-example 95th percentile of positive $\Delta a$. The
+target MLP output contribution is
+$y^{\text{target}}_\ell = D_\ell\!\left(f^{\text{clean}}_\ell \odot \mathbf{1}_{\Delta a > \tau}\right)$,
+and the per-layer alignment loss is
+$\mathcal{L}_\ell = -\sum_t \langle h^{\text{mlp,out}}_{\ell,t},\, y^{\text{target}}_{\ell,t} \rangle$.
+One backward pass over $\mathcal{L} = \sum_\ell \mathcal{L}_\ell$ accumulates
+$|\nabla_W \mathcal{L}|$ (\texttt{sample\_abs} semantics, matching
+\baseline{}). Only weights on paths that implement the selected
+task-discriminative features receive gradient; polysemantic CE would
+additionally reward weights tied to non-task features active at the same
+tokens.
+
+\paragraph{Basis 1: transcoders (\method{}).}
+$F_\ell \gg d_{\text{mlp}}$ sparse TopK transcoder features
+(\texttt{facebook/crv-8b-instruct-transcoders}; $F{=}131{,}072$), whose entries
+are approximately
+monosemantic~\citep{bricken2023monosemanticity,dunefsky2024transcoders}. This
+basis offers the cleanest feature separation but exists only for models with a
+published dictionary.
+
+\paragraph{Basis 2: native MLP neurons (\methodfree{}, dictionary-free).}
+\label{sec:method-dictfree}
+We take the model's own MLP hidden layer as the feature basis: the
+post-activation intermediate
+$f_{\ell} = \sigma(W_{\text{gate}} x) \odot (W_{\text{up}} x) \in \mathbb{R}^{d_{\text{mlp}}}$
+serves as the code, and the model's own \texttt{down\_proj} matrix is the
+decoder $D_\ell$. The contrastive selection rule and alignment loss are
+\emph{identical} to the transcoder case; only the basis changes.
+
+\emph{Intuition.} Individual MLP neurons are more polysemantic than dictionary
+features, so each selected neuron is a noisier task indicator. But the
+contrastive $\Delta a$ filter operates at the \emph{population} level: neurons
+that consistently fire more on clean than corrupted task inputs are, in
+aggregate, enriched for the task circuit even if no single neuron is
+monosemantic. Because the conjunction with CE saliency (below) demotes weights
+that only one signal favors, residual polysemantic noise in the circuit term
+is filtered rather than propagated into the mask. Empirically this native
+basis recovers most of the transcoder's gain on GSM8K and surpasses it on
+MMLU-STEM (\S\ref{sec:ablation})---the dictionary is an optional booster, not a
+requirement. \methodfree{} thus applies to \emph{any} transformer with no
+external artifacts, removing the main practical barrier to task-circuit PTQ.
+
+\subsection{Conjunctive combination and mask}
+\label{sec:method-conjunction}
+
+For each weight tensor $W$, define per-weight CE saliency $g_{\text{CE}}$ as in
+\baseline{} and circuit saliency $g_{\text{align}}$ from $\mathcal{L}$ above
+(same $|W|$ and $|W - W_{b\text{bit}}|$ scaling). Our main variant
+(\texttt{mult}) combines both via geometric mean:
+\begin{equation}
+\label{eq:mult}
+S(W) \;=\; |W| \cdot |W - W_{b\text{bit}}| \cdot \sqrt{g_{\text{CE}}(W)\, g_{\text{align}}(W)},
+\end{equation}
+selecting weights salient under \emph{both} task loss and task circuit. The
+conjunction is the active ingredient: replacing $g_{\text{CE}}$ entirely with
+$g_{\text{align}}$ (\texttt{align}) or using CE alone ties or trails on every
+task we test, and union-style boosts
+($g_{\text{CE}}(1 + \lambda g_{\text{align}})$) degenerate at 2-bit
+(\S\ref{sec:ablation}). Global top-$k$ over all eligible linear weights yields
+the binary mask $M$; GPTQ quantizes $M(W){=}0$ to $b$-bit and keeps
+$M(W){=}1$ in FP16.
+
+\paragraph{Why the conjunction works at low bit-width.}
+At 2-bit, quantization noise is large enough that protecting the wrong weights
+has a first-order cost: budget spent on weights that merely \emph{encode}
+generic surface statistics (high CE saliency, low circuit saliency) or on
+circuit edges whose quantization error happens to be benign (high circuit, low
+CE) is budget taken from weights that are both functionally necessary and
+fragile. The geometric mean implements an AND-gate over the two failure modes.
+At 3-bit the noise floor drops and nearly any sensible task-conditioned mask
+suffices---which is exactly what we observe (\S\ref{sec:results-3bit}).
+
+\subsection{Anchored union: consensus core and dispute region}
+\label{sec:method-anchored}
+
+Empirically, \baseline{} and v2~mult agree on only ${\sim}46$--$50\%$ of the
+FP16 budget ($J{\approx}0.30$--$0.33$; \S\ref{sec:analysis-overlap}). We
+formalize a two-region policy that never renegotiates consensus outliers and
+allocates only the remaining budget on the method-disputed mass. Let $\Omega$
+be the eligible weight indices, $s_{\text{\baseline{}}}(w)$ and
+$s_{\text{\method{}}}(w)$ the final per-weight scores, and
+$k = \lfloor \rho |\Omega| \rfloor$, $\rho{=}0.0035$. Each method induces a
+mask by global top-$k$; define
+$M_{\text{core}} \triangleq M_{\text{\baseline{}}} \cap M_{\text{\method{}}}$
+and
+$M_{\text{dispute}} \triangleq M_{\text{\baseline{}}} \,\triangle\, M_{\text{\method{}}}$.
+Stage~1 locks the core ($M \supseteq M_{\text{core}}$); Stage~2 fills the
+residual budget $k_{\text{fill}} = k - |M_{\text{core}}|$ from
+$M_{\text{dispute}}$ by ranking the blended normalized score
+$s_\lambda(w) = \lambda\, \hat{s}_{\text{\method{}}}(w) + (1-\lambda)\, \hat{s}_{\text{\baseline{}}}(w)$.
+The sweep over $\lambda$ tests where the optimal dispute allocation lies as
+quantization severity changes (\S\ref{sec:results}).
+
+\paragraph{Implementation notes.}
+Transcoders (when used) stream from CPU; saliency ranks on CPU. Native-basis
+extraction adds \emph{no} memory overhead beyond hooks on the MLP intermediate.
+Model: Llama-3.1-8B-Instruct. Complexity matches \baseline{} asymptotics (one
+forward--backward per calibration example), plus per-layer encode/decode for
+the transcoder basis only. \todo{Report wall-clock vs.\ \baseline{} on 128
+pairs; add Algorithm~1 pseudocode.}

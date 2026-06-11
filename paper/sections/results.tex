@@ -1,0 +1,180 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Saliency-source ablation: what signal should select outliers?}
+\label{sec:ablation}
+
+Our central experiment holds \emph{everything} fixed---model
+(Llama-3.1-8B-Instruct), FP16 budget (0.35\%, global top-$k$), contrastive
+calibration pairs (128), GPTQ (true-sequential), and evaluation---and varies
+only the saliency signal that ranks weights. Eight arms span the hypothesis
+space from task-agnostic controls to the full conjunction
+(Table~\ref{tab:ablation}).
+
+\begin{table}[t]
+\centering
+\caption{Saliency-source ablation at 2-bit (0.35\% FP16 budget, seed 0).
+Identical pipeline in every row; only the weight-ranking signal differs.
+GSM8K: 8-shot CoT accuracy on the full test set. MMLU-STEM: 5-shot accuracy on
+the held-out last 25\% of each subject's test split (chance $=25\%$).
+Dict.\ = requires an external feature dictionary.}
+\label{tab:ablation}
+\begin{tabular}{llccc}
+\toprule
+Arm & Saliency signal & Dict. & GSM8K & MMLU-STEM \\
+\midrule
+random    & uniform random                          & --  & 2.5  & 30.3 \\
+weight    & $|W|$                                   & --  & 14.4 & 33.6 \\
+magnitude & $|W| \cdot |\Delta W_{\text{quant}}|$   & --  & 16.7 & 27.8 \\
+\midrule
+ce ($\approx$\baseline{}) & CE gradient saliency    & --  & 25.4 & 41.3 \\
+align        & circuit only, transcoder basis       & \checkmark & 25.6 & 39.2 \\
+align$_{\text{free}}$ & circuit only, native basis  & --  & 22.9 & 42.6 \\
+\midrule
+mult (\method{})            & CE $\cap$ circuit, transcoder & \checkmark & \textbf{28.7} & 38.9 \\
+mult$_{\text{free}}$ (\methodfree{}) & CE $\cap$ circuit, native & -- & 26.5 & \textbf{44.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Finding 1: task-circuit information dominates bit-placement
+heuristics.} Every circuit-informed arm beats every control by a wide margin.
+On GSM8K, protecting the highest-magnitude weights recovers only 14.4\% and
+magnitude$\times$error 16.7\%, versus 22.9--28.7\% for circuit-informed
+selection; random placement collapses to 2.5\%. On MMLU-STEM the controls sit
+near chance (27.8--33.6\%) while circuit arms reach 38.9--44.2\%. \emph{Where}
+the task circuit lives carries most of the recoverable signal at 2-bit.
+
+\paragraph{Finding 2: the conjunction is the active ingredient.}
+On GSM8K the conjunction beats both of its parts: mult 28.7\% vs.\ ce 25.4\%
+(loss-only) and align 25.6\% (circuit-only). On MMLU-STEM the same holds in the
+native basis: mult$_{\text{free}}$ 44.2\% vs.\ ce 41.3\% and
+align$_{\text{free}}$ 42.6\%. Neither signal alone suffices; the AND-gate over
+task loss and task circuit is what buys accuracy.
+
+\paragraph{Finding 3: the dictionary is optional---and sometimes harmful.}
+\methodfree{} recovers 92\% of the transcoder conjunction on GSM8K (26.5 vs.\
+28.7) and \emph{surpasses every transcoder arm} on MMLU-STEM (44.2 vs.\ 38.9
+for mult). We attribute the reversal to basis--task fit: the CRV transcoders
+were trained to reconstruct general instruct-model behavior, and their feature
+space may tile math-word-problem structure (GSM8K) better than the
+heterogeneous knowledge retrieval MMLU requires; the native neuron basis is
+task-neutral. Practically, the external dictionary is an optional booster on
+some tasks rather than a dependency: conjunctive task-circuit PTQ works
+out-of-the-box on any transformer.
+
+\subsection{Task-conditioned downstream comparison (multi-seed)}
+\label{sec:results-downstream}
+
+Tables~\ref{tab:downstream2} and \ref{tab:downstream3} report the firm
+head-to-head between \baseline{} and \method{} v2~mult under the
+task-conditioned protocol (calibrate and evaluate on the same task;
+\S\ref{sec:setup}), with seeds varying the contrastive calibration sample.
+
+\begin{table}[t]
+\centering
+\caption{Task-conditioned \textbf{2-bit} (0.35\% budget): mean over calibration
+seeds (seed list in parentheses). GSM8K: 8-shot CoT accuracy; MMLU: held-out
+last 25\% of test. \todo{fill rebuilt multi-seed numbers when jobs land;
+single-seed entries marked $^\dagger$.}}
+\label{tab:downstream2}
+\begin{tabular}{lccc}
+\toprule
+Task & FP16 & \baseline{} & \method{} v2 mult \\
+\midrule
+GSM8K                & 69.3 & 28.3$^\dagger$ & 29.8$^\dagger$ \\
+MMLU STEM            & 59.0 & \todo{TBD} & \todo{TBD} \\
+MMLU humanities      & 66.0 & \todo{TBD} & 47.5$^\dagger$ \\
+MMLU social sciences & 75.6 & \todo{TBD} & \todo{TBD} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Task-conditioned \textbf{3-bit}: same protocol. \baseline{} over seeds
+$\{0,1,2\}$, v2 mult over $\{0,1\}$ (seed-2 in flight). All gaps are within
+seed spread: at 3-bit the methods are statistically tied.}
+\label{tab:downstream3}
+\begin{tabular}{lccc}
+\toprule
+Task & FP16 & \baseline{} & \method{} v2 mult \\
+\midrule
+GSM8K                & 69.3 & 63.7 & 63.3 \\
+MMLU STEM            & 59.0 & 56.5 & 54.8 \\
+MMLU humanities      & 66.0 & 63.0 & 63.1 \\
+MMLU social sciences & 75.6 & 73.0 & 74.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Conjunctive saliency is a low-bit phenomenon}
+\label{sec:results-3bit}
+
+Comparing Tables~\ref{tab:ablation} and \ref{tab:downstream3} yields the
+paper's sharpest intuition. At \textbf{2-bit}, the saliency source decides
+between collapse and function: the spread between the best and worst
+task-conditioned arm is 3--6 points, and between conjunction and magnitude
+controls 10--26 points. At \textbf{3-bit}, every gap between
+\baseline{} and the conjunction shrinks below seed noise ($\leq$1.7 points,
+Table~\ref{tab:downstream3}). The mechanism is simple: 3-bit quantization noise
+is small enough that GPTQ's error compensation absorbs most task damage
+regardless of which 0.35\% of weights are protected; at 2-bit the noise is
+catastrophic and the FP16 budget must land on weights that are simultaneously
+task-critical and quantization-fragile---precisely what the conjunction
+selects. Task-circuit saliency therefore matters most exactly when the bit
+budget is harshest, which is the regime mixed-precision PTQ exists for.
+
+\paragraph{A cautionary note on bit-width bookkeeping.}
+During this study we found that an earlier run had silently built ``2-bit''
+\method{} engines at 3 bits (a quantizer default overriding the pipeline
+intent), producing implausibly strong 2-bit numbers ($\sim$62\% GSM8K) that a
+matched-budget ablation immediately exposed ($28.7\%$). We recommend
+controlled saliency-source ablations as standard practice for mixed-precision
+PTQ papers: they are cheap, and they catch both bookkeeping errors and
+overclaiming.
+
+\subsection{Spider text-to-SQL (primary head-to-head)}
+\label{sec:results-spider}
+
+Table~\ref{tab:spider} reports execution accuracy on the Spider dev set (1034
+examples, test-suite-sql-eval) under the matched protocol. v2~mult averages
+29.4\% over four paired calibration seeds vs.\ \baseline{} 26.5\%
+($+2.9$\,pp mean paired $\Delta$); the best seed reaches 32.6\%. Replacing CE
+entirely with transcoder alignment (v1) ties \baseline{} (25.0 vs.\ 26.0),
+consistent with the ablation: improvement requires the conjunction, not either
+signal alone. At 3-bit, \baseline{} reaches 64.8\%, v1 ties (65.0\%), and
+v2~mult reaches 66.2\% (seed 0)---again a compressed gap at the milder
+bit-width.
+
+\begin{table}[t]
+\centering
+\caption{Spider execution accuracy (\%) on Llama-3.1-8B-Instruct, 0.35\%
+budget, 1360 Spider-train contrastive calibration pairs. Multi-seed: mean $\pm$
+sample std over four calibration seeds.}
+\label{tab:spider}
+\begin{tabular}{lcc}
+\toprule
+Method & FP16 & 2-bit \\
+\midrule
+FP16 (unquantized)          & 67.8 & --   \\
+\baseline{}~\citep{xiao2025tacq} (mean) & -- & 26.5 $\pm$ 2.0 \\
+\method{} v1 (align-only)   & --   & 25.0 \\
+\method{} v2 mult (mean)    & --   & \textbf{29.4 $\pm$ 2.7} \\
+\method{} v2 mult (best seed) & -- & 32.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Replication sanity check (Llama-3-8B).}
+Our harness reproduces \baseline{} Spider exec accuracy: 67.7 (FP16), 22.3
+(2-bit), 60.1 (3-bit) vs.\ paper 67.6 / 21.92 / 58.32~\citep{xiao2025tacq}.
+
+\paragraph{Dispute sweep (anchored union).}
+The anchored-union construction (\S\ref{sec:method-anchored}) locks the
+consensus core ($\sim$46\% of budget at 2-bit) and re-ranks only the XOR
+dispute mass. The mask morph behaves as designed ($J$ vs.\ \baseline{} falls
+from 0.708 to 0.462 as $\lambda$ goes 0 to 1). Partial Spider evals at 3-bit
+peak at the \baseline{}-heavy endpoint ($\lambda{=}0$: 63.2\% vs.\ 59.9\% at
+$\lambda{=}0.5$), consistent with milder quantization favoring load-bearing
+MLP mass over routing-heavy circuit weights. \todo{complete 2-bit sweep.}

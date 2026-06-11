@@ -1,0 +1,44 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\paragraph{Model and interpretability stack.}
+Llama-3.1-8B-Instruct via the \texttt{unsloth} mirror (bit-identical to Meta
+weights). Transcoders (for \method{} only):
+\texttt{facebook/crv-8b-instruct-transcoders} (32 layers, TopK,
+$F{=}131{,}072$). \methodfree{} uses no external artifacts. All head-to-head
+comparisons use this model; Llama-3-8B \baseline{} numbers reproduce the
+original paper on a separate track.
+
+\paragraph{Tasks and metrics (\baseline{} paper protocol).}
+\begin{itemize}
+  \item \textbf{Spider} text-to-SQL: execution accuracy on dev (1034 examples,
+        test-suite-sql-eval).
+  \item \textbf{GSM8K}: 8-shot chain-of-thought; flexible numeric extraction.
+  \item \textbf{MMLU}: 5-shot MCQA; three subject splits (STEM, humanities,
+        social sciences), each conditioned separately; calibration on the
+        first 75\% of each subject's test CSV, evaluation on the last 25\%.
+\end{itemize}
+
+\paragraph{Calibration (task-conditioned).}
+Corrupt model, importances, mask, and masked GPTQ are calibrated on the same
+task as evaluation. Spider uses the train split (1360 contrastive pairs);
+GSM8K uses train-split 8-shot CoT prompts (128 pairs); MMLU uses the
+test-0--75\% rows (128 pairs). Evaluation rows are never used for calibration;
+an automated audit enforces the split policy on every run.
+
+\paragraph{Multi-seed protocol.}
+Seeds vary the contrastive calibration sample (and gradient/GPTQ RNG), not the
+quantizer or budget. Spider: four seeds for both methods. GSM8K/MMLU: three
+seeds (0--2).
+
+\paragraph{Quantization protocol (matched for fairness).}
+Outlier fraction 0.35\% (\texttt{mask\_fraction}=0.0035) over 224 attn+MLP
+weight tensors; global top-$k$; reference $\Delta W$ from $b$-bit RTN
+dequantization (ablation arms) or GPTQ corrupt checkpoint (Spider track);
+final quantization with GPTQ true-sequential, 128 calibration samples;
+bit-widths 2 and 3. Baselines: FP16, uniform GPTQ (no mask), \baseline{}
+(contrastive CE saliency).
+
+\paragraph{Hardware and reproducibility.}
+All experiments run on 4$\times$H200 (141\,GB) nodes; replication scripts
+under \texttt{scripts/} and \texttt{TACQ/}. \todo{Report total GPU-hours.}

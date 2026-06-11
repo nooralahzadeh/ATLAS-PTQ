@@ -1,0 +1,48 @@
+\section{Research Questions}
+\label{sec:rqs}
+
+\paragraph{RQ1: Conjunctive vs.\ single-signal saliency.}
+Does requiring a weight to be salient to both the task loss \emph{and} the
+task circuit identify a better outlier set than either signal alone at the
+same FP16 budget?
+\emph{Status:} Yes at 2-bit. Ablation (Table~\ref{tab:ablation}): mult 28.7\%
+vs.\ ce 25.4\% / align 25.6\% on GSM8K; mult$_{\text{free}}$ 44.2\% vs.\ ce
+41.3\% / align$_{\text{free}}$ 42.6\% on MMLU-STEM. Spider: v2~mult
+$+2.9$\,pp mean over four paired seeds (Table~\ref{tab:spider}).
+
+\paragraph{RQ2: Is an external dictionary necessary?}
+Can the circuit term be computed in the model's native MLP-neuron basis
+without transcoders or SAEs?
+\emph{Status:} Yes. \methodfree{} recovers 92\% of the transcoder gain on
+GSM8K and surpasses all transcoder arms on MMLU-STEM
+(\S\ref{sec:ablation}). The dictionary is an optional booster, not a
+dependency.
+
+\paragraph{RQ3: Circuit vs.\ bit-placement heuristics.}
+Do magnitude, quantization-error, and random selection explain the gains?
+\emph{Status:} No. Controls trail circuit-informed arms by 10--26 points at
+2-bit on GSM8K and sit near chance on MMLU-STEM (Table~\ref{tab:ablation}).
+
+\paragraph{RQ4: Bit-width dependence.}
+At what quantization severity does saliency choice matter?
+\emph{Status:} Conjunctive saliency is a low-bit phenomenon: decisive at
+2-bit, within seed noise at 3-bit (\S\ref{sec:results-3bit}).
+
+\paragraph{RQ5: Feature--weight alignment under superposition.}
+Do task-discriminative circuit features map to distinct weight subsets from CE
+saliency?
+\emph{Status:} $J{=}0.298$ (2-bit) / 0.331 (3-bit) between v2~mult and
+\baseline{}; mid layers 4--14 and MLP projections diverge most; cross-seed
+stability $J{=}0.995$--0.997 (v2) vs.\ 0.983--0.985 (\baseline{})
+(\S\ref{sec:analysis-overlap}).
+
+\paragraph{RQ6: Calibration source.}
+How much does the calibration distribution matter at 2--3 bit?
+\emph{Status:} A 25+ point collapse when switching \baseline{} MSG from Spider
+to C4 calibration at 2-bit (\S\ref{sec:domain-shift}); task-matched
+calibration is necessary even with the mask held fixed.
+
+\paragraph{RQ7: Baseline reproduction.}
+Does our ported \baseline{} pipeline behave consistently with published
+numbers? \emph{Status:} Llama-3-8B Spider replication matches paper targets
+(67.7 / 22.3 / 60.1 exec\%).

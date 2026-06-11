@@ -1,0 +1,72 @@
+\documentclass{article}
+\usepackage{iclr2025_conference}
+\usepackage{times}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{multirow}
+
+% --- TODO marker -------------------------------------------------------------
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+% --- Method name macros ------------------------------------------------------
+\newcommand{\method}{T-DSO}        % transcoder-guided variant
+\newcommand{\methodfree}{T-DSO$_{\text{free}}$} % dictionary-free variant (native MLP basis)
+\newcommand{\baseline}{TaCQ}
+
+\title{Conjunctive Task-Circuit Saliency for Low-Bit LLM Quantization}
+
+\author{Anonymous Authors\\
+\texttt{anonymous@domain.edu}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Low-bit post-training quantization (PTQ) compresses large language models but
+often destroys task-specific capabilities when only a tiny fraction of weights
+can remain in full precision. Task-Circuit Quantization (\baseline{}) selects
+FP16 outlier weights using contrastive gradients on cross-entropy loss,
+treating the model as a black box. We propose \emph{conjunctive task-circuit
+saliency}: a weight is protected only if it is salient \emph{both} to the task
+loss \emph{and} to the activation circuit that distinguishes clean from
+corrupted task inputs. We instantiate the circuit term in two bases: sparse
+transcoder features (\method{}) and---crucially---the model's \emph{own MLP
+neurons} (\methodfree{}), which requires no external dictionary and applies to
+any transformer. A controlled saliency-source ablation on Llama-3.1-8B-Instruct
+(matched 0.35\% FP16 budget, identical GPTQ pipeline, only the saliency signal
+varies) shows at 2-bit: (i) circuit-informed selection far exceeds magnitude,
+quantization-error, and random controls; (ii) the conjunction beats either of
+its parts (GSM8K: 28.7\% vs.\ CE 25.4\% and circuit-only 25.6\%); and (iii) the
+dictionary is \emph{optional}: \methodfree{} recovers most of the transcoder
+gain on GSM8K (26.5\%) and surpasses all transcoder arms on MMLU-STEM (44.2\%
+vs.\ 38.9\%). At 3-bit all task-conditioned methods converge, identifying
+conjunctive saliency as a distinctly \emph{low-bit} phenomenon: where to spend
+the FP16 budget matters most exactly when the budget is harshest. On Spider
+text-to-SQL, \method{} v2~mult improves execution accuracy by +2.9 points on
+average over four paired calibration seeds (29.4\% vs.\ \baseline{} 26.5\%).
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/theoretical_framing}
+\input{sections/research_questions}
+\input{sections/related_work}
+\input{sections/method}
+\input{sections/experimental_setup}
+\input{sections/results}
+\input{sections/domain_shift}
+\input{sections/analysis}
+\input{sections/limitations}
+\input{sections/systems_outlook}
+\input{sections/conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}

@@ -129,8 +129,8 @@ class MMLU_N_Shot_Dataset(torchDataset):
         prompt = self.texts[idx]
         inputs = self.tokenizer(prompt, return_tensors="pt", padding="longest", truncation=False).to(self.device)
         inputs = {k:v.squeeze(0) for k, v in inputs.items()}
-        idx <= 3 and self.verbose and print(f"DATALOADER INPUT IDS SHAPE {inputs["input_ids"].shape}") # DATALOADER INPUT IDS SHAPE torch.Size([2048])
-        idx <= 3 and self.verbose and print(f"INPUT IDS {inputs["input_ids"]}")
+        idx <= 3 and self.verbose and print(f"DATALOADER INPUT IDS SHAPE {inputs['input_ids'].shape}") # DATALOADER INPUT IDS SHAPE torch.Size([2048])
+        idx <= 3 and self.verbose and print(f"INPUT IDS {inputs['input_ids']}")
         return inputs 
 
 
@@ -138,7 +138,7 @@ def get_mmlu_dataset(nsamples, seed, seqlen, model, data_directory = DATA_DIRECT
     """Follows the GPTQ repo convention for preparing a calibration dataset for MMLU_MCQA"""
     import torch
     from transformers import AutoTokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True)
 
     calibration_dataset_no_padding = MMLU_N_Shot_Dataset(data_directory=data_directory, model_name=model, tokenizer=tokenizer, use_train_split=True, \
                  verbose=False, ntrain=5, eval_start_p=.75, train_end_p=.75, subjects_to_use=subjects_to_use, \

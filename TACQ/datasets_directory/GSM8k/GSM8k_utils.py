@@ -317,14 +317,13 @@ class GSM8k_N_Shot_Dataset(torchDataset):
         random.shuffle(self.texts)
 
     def truncate_to_seqlen_n_samples(self, seqlen, n_samples):
-        tokens_to_give = seqlen*n_samples
-        current_token_count = 0
-        for i in range(len(self.texts)):
-            if current_token_count + len(self.tokenizer(self.texts[i])["input_ids"]) > tokens_to_give:
-                break
-            current_token_count += len(self.tokenizer(self.texts[i])["input_ids"])
-        print(f"Truncated to {i} samples, current_token_count: {current_token_count}, tokens_to_give: {tokens_to_give}")
-        self.texts = self.texts[:i]
+        # Pre-incident semantics (recovered from bytecode): keep exactly the first
+        # n_samples prompts after shuffle. All firm/ablation GSM8k numbers were
+        # produced with this ("Truncated to 128 samples (n_samples=128, seqlen=2048)"),
+        # NOT with the upstream token-budget truncation.
+        n_keep = min(n_samples, len(self.texts))
+        self.texts = self.texts[:n_keep]
+        print(f"Truncated to {n_keep} samples (n_samples={n_samples}, seqlen={seqlen})")
 
     def to_hf_dataset(self):
         from datasets import Dataset as hfDataset
@@ -340,15 +339,15 @@ class GSM8k_N_Shot_Dataset(torchDataset):
         prompt = self.texts[idx]
         inputs = self.tokenizer(prompt, return_tensors="pt", padding="longest", truncation=False).to(self.device)
         inputs = {k:v.squeeze(0) for k, v in inputs.items()}
-        idx <= 3 and self.verbose and print(f"DATALOADER INPUT IDS SHAPE {inputs["input_ids"].shape}") # DATALOADER INPUT IDS SHAPE torch.Size([2048])
-        idx <= 3 and self.verbose and print(f"INPUT IDS {inputs["input_ids"]}")
+        idx <= 3 and self.verbose and print(f"DATALOADER INPUT IDS SHAPE {inputs['input_ids'].shape}") # DATALOADER INPUT IDS SHAPE torch.Size([2048])
+        idx <= 3 and self.verbose and print(f"INPUT IDS {inputs['input_ids']}")
         return inputs  # a dict with input_ids, labels, attention masks, etc
 
 def get_gsm8k(nsamples, seed, seqlen, model, data_filepath=DATA_DIRECTORY, n_shot = 8, cot_flag = True):
     """Follows the GPTQ repo convention for preparing a calibration dataset for GSM8k"""
     from transformers import AutoTokenizer
     import torch
-    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True)
 
     calibration_dataset_no_padding = GSM8k_N_Shot_Dataset(data_filepath=data_filepath, model_name=model, tokenizer=tokenizer, \
                 use_train_split=True, n_shot=n_shot, cot_flag=cot_flag, make_data_wrong=False

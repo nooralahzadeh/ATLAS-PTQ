@@ -1,0 +1,25 @@
+\section{Limitations}
+\label{sec:limitations}
+
+\begin{itemize}
+  \item \textbf{Dictionary variant coverage.} Full per-layer CRV transcoders
+        exist only for Llama-3.1-8B. The dictionary-free variant
+        (\methodfree{}) removes this dependency for the method itself, but our
+        cross-basis comparison (transcoder vs.\ native) is correspondingly
+        limited to this model; replicating the basis--task interaction on a
+        second model family is in progress.
+  \item \textbf{Approximate MLP targets (transcoder basis).} TopK transcoders
+        reconstruct MLP output imperfectly; where reconstruction is weak the
+        alignment gradient partially chases approximation artifacts
+        (\S\ref{sec:analysis-basis}). The native basis avoids this by
+        construction.
+  \item \textbf{Seed / calibration variance.} Both methods vary with
+        calibration seed at 2-bit (Spider: v2 spans 26.2--32.6\%, \baseline{}
+        25.0--29.6\%). We report paired multi-seed means; single-seed entries
+        are marked. Paired bootstrap confidence intervals are pending.
+  \item \textbf{Task coverage.} Firm evidence on Spider, GSM8K, and three MMLU
+        splits; HumanEval and broader reasoning suites are future work.
+  \item \textbf{Scale.} Results are on an 8B model. The dictionary-free
+        variant makes scale extension independent of dictionary releases;
+        70B validation is queued.
+\end{itemize}

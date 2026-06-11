@@ -44,11 +44,22 @@ def assert_calib_pairs_path(path: str, *, allow_legacy_eval: bool) -> None:
                 f"splits. See data/contrastive/README.md. Pass --allow-legacy-eval-pairs "
                 f"only for debugging."
             )
-    if not any(k in name for k in ("train", "calib", "dev")):
+    # Accepted calibration-file conventions used across the project:
+    #   *_train<N>   (spider train1360, ...)          -> train-derived calib
+    #   *_calib*                                        -> explicit calib
+    #   *_dev*       (mmlu_mcqa_contrastive_dev)        -> dev used as calib for MCQA
+    #   *_tacq*      (gsm8k_contrastive_tacq)           -> TaCQ train-derived 8-shot calib
+    #   *_test<N>    (mmlu_*_contrastive_test75)        -> test rows [0,N%] used as CALIB;
+    #                                                      eval reserved for [N%,100%].
+    # Bare "test"/"dev" *splits* are still rejected by reject_eval_split() (content side);
+    # this is the filename sanity guard. Leakage itself is enforced by the audit.
+    ok = any(k in name for k in ("train", "calib", "dev", "tacq")) or re.search(r"test\d+", name)
+    if not ok:
         raise ValueError(
-            f"Contrastive pairs {p} have no 'train', 'calib', or 'dev' in the filename. "
-            f"Use an explicitly named calibration file (e.g. "
-            f"spider_contrastive_train1360.jsonl, mmlu_mcqa_contrastive_dev.jsonl)."
+            f"Contrastive pairs {p} have no recognized calibration marker in the filename "
+            f"('train', 'calib', 'dev', 'tacq', or 'test<N>'). Use an explicitly named "
+            f"calibration file (e.g. spider_contrastive_train1360.jsonl, "
+            f"mmlu_stem_contrastive_test75.jsonl, gsm8k_contrastive_tacq.jsonl)."
         )
 
 

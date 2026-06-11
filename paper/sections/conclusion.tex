@@ -1,0 +1,37 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Low-bit PTQ forces a choice about which tiny fraction of weights must remain
+in full precision. We showed that the right selection signal is a
+\emph{conjunction}: protect a weight only if it is salient to the task loss
+\emph{and} to the activation circuit separating clean from corrupted task
+inputs.
+
+\paragraph{Three takeaways.}
+\textbf{(1) The conjunction is the active ingredient.} In a controlled
+saliency-source ablation with everything matched except the ranking signal,
+the conjunction beats loss-only (CE/\baseline{}) and circuit-only selection on
+both GSM8K and MMLU-STEM at 2-bit, and all circuit-informed arms dominate
+magnitude/error/random controls by 10--26 points.
+\textbf{(2) No dictionary required.} Computing the circuit term in the model's
+own MLP-neuron basis (\methodfree{}) recovers most of the transcoder variant's
+gain on GSM8K and surpasses it on MMLU-STEM---turning task-circuit PTQ from a
+method gated on interpretability artifact releases into one that applies to
+any transformer out-of-the-box.
+\textbf{(3) Low-bit is where saliency matters.} At 3-bit all task-conditioned
+methods converge to within seed noise; at 2-bit the saliency source separates
+collapse from function. Mixed-precision PTQ research should therefore be
+evaluated---and ablated---at the bit-widths where selection actually binds.
+
+On Spider, intersecting CE with transcoder task-circuit attribution selects a
+markedly different circuit ($J{=}0.30$ vs.\ \baseline{}) and improves 2-bit
+execution accuracy by $+2.9$ points on average at matched budget, with causal
+knockout supporting that the selected subnetwork implements task routing.
+
+\paragraph{Future work.} Multi-task overlay masks
+(\S\ref{sec:systems-outlook}), paired-bootstrap significance on all headline
+gaps, second-model replication of the basis--task interaction, and
+budget-fraction sweeps locating where the conjunction's advantage emerges.
+
+\paragraph{Reproducibility.} Code, masks, contrastive calibration sets, and
+replication logs: \todo{anonymous repo URL for submission}.

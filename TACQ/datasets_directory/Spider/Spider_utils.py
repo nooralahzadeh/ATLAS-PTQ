@@ -135,15 +135,15 @@ class Spider_N_Shot_Dataset(torchDataset):
         prompt = self.texts[idx]
         inputs = self.tokenizer(prompt, return_tensors="pt", padding="longest", truncation=False).to(self.device)
         inputs = {k:v.squeeze(0) for k, v in inputs.items()}
-        idx <= 3 and self.verbose and print(f"DATALOADER INPUT IDS SHAPE {inputs["input_ids"].shape}") # DATALOADER INPUT IDS SHAPE torch.Size([2048])
-        idx <= 3 and self.verbose and print(f"INPUT IDS {inputs["input_ids"]}")
+        idx <= 3 and self.verbose and print(f"DATALOADER INPUT IDS SHAPE {inputs['input_ids'].shape}") # DATALOADER INPUT IDS SHAPE torch.Size([2048])
+        idx <= 3 and self.verbose and print(f"INPUT IDS {inputs['input_ids']}")
         return inputs  # a dict with input_ids, labels, attention masks, etc
 
 def get_Spider(nsamples, seed, seqlen, model, data_filepath = DATA_DIRECTORY):
     """Follows the GPTQ repo convention for preparing a calibration dataset for Spider"""
     from transformers import AutoTokenizer
     import torch
-    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True)
 
     calibration_dataset_no_padding = Spider_N_Shot_Dataset(data_filepath=data_filepath, model_name=model, tokenizer=tokenizer, \
                 use_train_split=True, make_data_wrong=False
@@ -179,7 +179,7 @@ def get_Spider_concat(nsamples, seed, seqlen, model, data_filepath="data/spider/
     """
     from transformers import AutoTokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False)
+    tokenizer = AutoTokenizer.from_pretrained(model, use_fast=True)
     calibration_dataset = Spider_N_Shot_Dataset(
         data_filepath=data_filepath,
         model_name=model,
