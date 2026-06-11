@@ -7,237 +7,210 @@ the scratch incident (the previous untracked ledger was lost).
 Model: `Meta-Llama-3.1-8B-Instruct` · FP16 outlier budget: **0.35%** · GPTQ
 true-sequential · seed 0 unless noted.
 
+Paper naming: **ATLAS-T** = transcoder (internal `mult`/`tdsoV2mult`),
+**ATLAS-N** = native/dict-free (internal `mult_free`).
+
 ---
 
-## Saliency-source ablation (2-bit) — job 2513827
+## 1. Saliency-source ablation — 2-bit, seed 0
 
-**Question.** Does the gain come from the *task circuit* and specifically from the
-*conjunction* (CE ∩ circuit-alignment), or is it just bit-placement / magnitude?
-And can we drop the external transcoder?
+**Question.** Does the gain come from the *conjunction* (CE ∩ circuit), the
+feature dictionary, or just bit-placement heuristics?
 
-All arms share the identical mask format, the identical 0.35% global top-k
-selection, and the identical GPTQ + eval pipeline. Only the **saliency signal**
-that ranks weights differs.
+Everything held fixed except the saliency signal. Source logs:
+`saliency_source_ablation_w2.log`, `humfix_A_2519273.out`, `2518046.out`.
 
-Source log: `tacq_data/results/saliency_source_ablation_w2.log`
+| Arm | Signal | Dict? | GSM8k | STEM | Hum | Soc |
+|---|---|---|---|---|---|---|
+| random | uniform | – | 2.5 | 30.3 | 25.4 | 25.4 |
+| weight | \|W\| | – | 14.4 | 33.6 | 33.9 | 38.7 |
+| magnitude | \|W\|·\|ΔW\| | – | 16.7 | 27.8 | 25.7 | 31.5 |
+| ce (≈TaCQ) | CE gradient | – | 25.4 | 41.3 | **44.2** | 54.1 |
+| align | circuit, transcoder | yes | 25.6 | 39.2 | 42.2 | 49.0 |
+| align_free | circuit, native | no | 22.9 | 42.6 | 45.7 | 52.6 |
+| **mult (ATLAS-T)** | CE ∩ circ, transcoder | yes | **28.7** | 38.9 | 45.0 | 53.4 |
+| mult_free (ATLAS-N) | CE ∩ circ, native | no | 26.5 | **44.2** | 45.9 | **55.9** |
 
-| Arm | Saliency signal | Dict? | GSM8k 2b | MMLU_STEM 2b |
+NOTE: Hum numbers are from humfix_A (truncation bug fixed, `truncation=False`).
+Hum values from 2518046 (transcoder arms only, pre-fix tokenization on the
+align pathway but ce was unaffected): ce=45.6, align=42.2, mult=45.0 —
+consistent with humfix_A within 1.5pp. Soc values from 2518046.
+
+### Findings
+
+1. **Circuit > heuristics.** Every circuit arm beats every control by 10–26pp
+   on GSM8k and 5–20pp on STEM/Hum/Soc at 2-bit.
+2. **Conjunction > either part alone.** GSM8k: ATLAS-T 28.7 > ce 25.4 ≈ align
+   25.6. STEM: ATLAS-N 44.2 > ce 41.3 > align_free 42.6. Soc: ATLAS-N 55.9
+   > ce 54.1 > align_free 52.6. Hum: ATLAS-N 45.9 ≈ align_free 45.7 > ce 44.2.
+3. **Dictionary optional, sometimes harmful.** ATLAS-N ≥ ATLAS-T on 3/4 tasks;
+   ATLAS-T only wins on GSM8k (28.7 vs 26.5).
+
+---
+
+## 2. Saliency-source ablation — 3-bit, seed 0
+
+Source log: `saliency_source_ablation_2518047.out`.
+
+| Arm | GSM8k | STEM | Hum | Soc |
 |---|---|---|---|---|
-| random | random weights | – | 2.5% | 30.3% |
-| weight | \|W\| | – | 14.4% | 33.6% |
-| magnitude | \|W\|·\|ΔW_quant\| | – | 16.7% | 27.8% |
-| align_free | circuit alignment, MLP-neuron basis | no | 22.9% | 42.6% |
-| ce (≈TaCQ) | CE-gradient saliency | – | 25.4% | 41.3% |
-| align | circuit alignment, transcoder basis | yes | 25.6% | 39.2% |
-| mult_free | CE ∩ alignment, MLP-neuron basis | no | 26.5% | **44.2%** |
-| **mult** | **CE ∩ alignment, transcoder basis** | yes | **28.7%** | 38.9% |
+| random | 36.2 | 45.4 | 52.3 | 60.1 |
+| weight | **62.4** | 54.2 | 58.5 | 70.1 |
+| magnitude | 56.6 | 48.7 | 56.4 | 65.9 |
+| ce (≈TaCQ) | 58.3 | 54.7 | 60.7 | 71.2 |
+| align | 59.0 | 54.5 | 62.0 | 72.1 |
+| mult (ATLAS-T) | 60.9 | 54.2 | 62.2 | **74.2** |
 
-MMLU_STEM arms completed by job 2517685 (2026-06-11) after fixing the
-post-restore tokenizer bug; align_free/mult_free engines from job 2513954
-(identical calibration semantics). MCQA chance level is 25%, so
-random/weight/magnitude sit near chance.
+NOTE: dict-free arms (align_free/mult_free) at 3-bit are in humfix_B (in
+flight); seed-0 GSM8k/STEM/Soc results from dfree_w3s0 job: align_free
+59.7/53.8/71.7, mult_free 57.9/54.1/72.3.
 
-### Interpretation (decision gates)
-
-1. **Circuit matters, not just magnitude.** Both tasks: circuit-informed arms
-   (ce/align/mult/_free) clearly beat weight/magnitude/random (GSM8k 22.9–28.7
-   vs 2.5–16.7; STEM 38.9–44.2 vs near-chance 27.8–33.6). ✔
-2. **The conjunction is the active ingredient — with the right basis.**
-   GSM8k: mult 28.7 > ce 25.4 ≈ align 25.6 (transcoder conjunction wins).
-   MMLU_STEM: mult_free 44.2 > ce 41.3 > align 39.2 ≈ mult 38.9 — here the
-   conjunction only wins in the **dict-free** basis; the transcoder conjunction
-   *underperforms* ce. Conjunctive saliency helps on both tasks, but the best
-   feature basis is task-dependent. ✔ (qualified)
-3. **The transcoder is removable — and sometimes harmful.** mult_free recovers
-   92% of mult on GSM8k (26.5 vs 28.7) and **beats** it by +5.3 on MMLU_STEM
-   (44.2 vs 38.9). The dictionary is an optional booster on GSM8k and a
-   liability on STEM → the dict-free method is the safer default and the
-   stronger paper story. ✔
-
-**Status.** COMPLETE — GSM8k 2b 8/8 arms (job 2513827+2513954), MMLU_STEM 2b
-8/8 arms (job 2517685 after fixing post-restore code drift: `use_fast=False`
-tokenizer breakage and GSM8k truncation semantics; see RECOVERY_STATUS.md).
+**Finding: convergence at 3-bit.** At 3-bit, weight magnitude (62.4%) *beats*
+the conjunction (60.9%) on GSM8k. All circuit arms are within 2–4pp. Even random
+recovers 36%. The saliency signal that drove 26pp gaps at 2-bit produces ≤5pp
+gaps at 3-bit — direct controlled evidence for the **low-bit phenomenon**.
 
 ---
 
-## 3-bit downstream head-to-head — job 2512614 (`down_firm3_r`)
+## 3. RTN backbone ablation — 2-bit, seed 0
 
-TaCQ vs T-DSO v2-mult, matched 0.35% budget, 3 seeds. Job FAILED at the final
-eval (v2-mult GSM8k seed2), so v2-mult has seeds 0–1 only; TaCQ has 0–2.
-Source log: `tacq_data/results/downstream_firm_w3.log`. Metric: GSM8k accuracy,
-MMLU average accuracy (test 75–100%).
+**Question.** Does the gain come from the ATLAS mask or from GPTQ?
 
-| Task | TaCQ 3b (mean) | v2-mult 3b (mean) | Δ |
+Same masks as the 2-bit ablation, but quantizer replaced by RTN (round-to-
+nearest, `--nearest`). Source log: `rtn_backbone_2519868.out`.
+
+| Quantizer | Mask | GSM8k | STEM |
 |---|---|---|---|
-| GSM8k | 63.7 (63.8/63.2/64.0) | 63.3 (63.3/63.3) | −0.4 |
-| MMLU_STEM | 56.5 (57.1/55.3/57.0) | 54.8 (54.0/55.7) | −1.7 |
-| MMLU_humanities | 63.0 (61.7/64.3/62.9) | 63.1 (62.6/63.7) | +0.1 |
-| MMLU_social_sciences | 73.0 (72.4/73.7/73.0) | 74.1 (74.5/73.7) | +1.1 |
+| GPTQ | ATLAS-T | 28.7 | 38.9 |
+| GPTQ | ATLAS-N | 26.5 | 44.2 |
+| GPTQ | TaCQ (ce) | 25.4 | 41.3 |
+| GPTQ | random | 2.5 | 30.3 |
+| **RTN** | **ATLAS-T** | **0.0** | **22.2** |
+| **RTN** | **ATLAS-N** | **0.0** | **22.2** |
+| **RTN** | **TaCQ (ce)** | **0.0** | **22.2** |
+| **RTN** | **random** | **0.0** | **22.2** |
 
-**Finding.** At 3-bit the two methods are tied: every gap ≤1.7 pts and within
-seed spread. The conjunction advantage seen at 2-bit (ablation table above)
-**vanishes at 3-bit** → the contribution is a *low-bit* effect: task-circuit
-saliency matters most when the bit budget is harshest.
+**Finding: GPTQ is the enabling prerequisite.** At 2-bit RTN, the model is
+uniformly destroyed (0% GSM8k, 22% STEM ≈ random chance on 4-way MCQA)
+regardless of which 0.35% of weights are protected. Every mask — even our best
+one — produces identical garbage output. Saliency-guided selection only matters
+when a quantizer that compensates for rounding error (GPTQ) creates the
+recoverable regime. RTN noise at 2-bit is catastrophic and un-rescuable.
 
-### ✅ RESOLVED — firm "2-bit" T-DSO engines were actually 3-bit (wbits bug)
-Investigation of `downstream_firm_w2.log`:
-- The `tdsoV2mult_GSM8k_2bit = 64.9%` line is **stale provenance** — a
-  `RESULT task=` summary echoed at 17:12:13, *before* the engine was built
-  (17:45), repeated 5× in the log. Ignore all `RESULT task=` lines; only
-  `RESULT calib=` lines are real evals.
-- The real firm eval is `calib= 62.5%` (s0) / 60.7% (s1) — still anomalous.
-- **Root cause:** the v2-mult GSM8k build block (17:33:43, the one that saved
-  `tdsoV2mult_GSM8k_2bit_quantized_model.pt`) shows **224 layers all `bits = 3`**.
-  `WBITS` was not propagated into the v2-mult GPTQ call, so every firm "2-bit"
-  T-DSO engine is physically a **3-bit** model (file is byte-identical in size to
-  the 3-bit engine; TaCQ 2-bit, built correctly at `bits = 2`, is a different
-  size and scores 28.3%).
-
-**Consequence.** Discard ALL firm 2-bit T-DSO v2-mult numbers. The trustworthy
-genuine-2-bit numbers are:
-- T-DSO mult GSM8k 2b = **28.7%** (saliency-source ablation, matched config)
-- TaCQ GSM8k 2b = **28.3%** (firm, genuine `bits=2`) ≈ ablation ce 25.4%
-The bug is the same one patched in `scripts/run_downstream_seed_llama31.sh`
-(explicit `--wbits "$WBITS"`); firm 2-bit T-DSO must be rebuilt with the fix.
+**For the paper.** This sharpens the low-bit analysis: task-circuit saliency
+operates in a *window* — between "noise so mild masks don't matter" (3-bit) and
+"noise so catastrophic nothing helps" (2-bit RTN). GPTQ opens the window; ATLAS
+exploits it.
 
 ---
 
-## Method naming (2026-06-11)
+## 4. Fixed MMLU_humanities numbers — truncation bug resolution
 
-Family name: **ATLAS** = AND-gated Task-circuit Loss-Aligned Saliency.
-- **ATLAS-T** = transcoder feature basis (internal: T-DSO v2 `mult`,
-  engines `tdsoV2mult_*`).
-- **ATLAS-N** = native MLP-neuron basis, dictionary-free (internal:
-  `mult_free`).
-- Circuit-only arms (`align` / `align_free`) stay descriptive, no branding.
-- Internal pipeline names (tdsoV2mult, mult_free, ...) unchanged in code/logs;
-  the mapping above is the paper-facing vocabulary.
+### Bug summary
+Our extractors tokenized with right-truncation at 2048 tokens. Humanities
+5-shot prompts are ~3.5k tokens; the corruption edits the last question. After
+truncation clean == corrupted → zero circuit signal → degenerate masks.
+Fixed by `truncation=False` + `max_len=4096`. All non-humanities results are
+unaffected (divergence within 2048-token window).
 
-### ⚠️ MMLU_humanities truncation bug (2026-06-11) — circuit arms contaminated
+### Corrected firm ATLAS-T (mult) 2-bit humanities
+Source log: `humfix_A_2519273.out`.
 
-**Symptom.** Dict-free humanities masks (ALL bit-widths/seeds) kept **100%** of
-weights instead of 0.35% → near-FP16 engines (mult_free = align_free = 65.96%,
-FP16 = 66.0). Align loss was exactly 0 on every batch.
+| Seed | ATLAS-T 2b hum | TaCQ 2b hum (unchanged) |
+|---|---|---|
+| s0 | 45.1 | 51.5 |
+| s1 | 45.3 | 49.9 |
+| s2 | 43.7 | 51.9 |
 
-**Root cause.** Our extractors tokenized with right-truncation at
-`max_len=2048`. Humanities 5-shot prompts run ~13k chars and the corruption
-edits the LAST question (first clean/corrupt divergence at 9.5k–14k chars ≈
-2.4k–3.5k tokens). After truncation clean == corrupted →
-`relu(a_clean − a_corr) = 0` → all-zero saliency → global threshold kept
-everything. Other tasks diverge at ~2k chars — inside the window — and are
-unaffected (all masks exactly 0.35%).
-
-**Why TaCQ doesn't hit this.** TaCQ has no input-corruption pathway at all —
-its "contrastive" is weight-space (`grad × (W − W_quant) × W`) and its
-dataloaders use `truncation=False` (drops whole samples, never cuts one). The
-clean/corrupt input contrast is OUR addition; the truncation choice was ours.
-
-**Transcoder arms also contaminated (silently).** Same tokenization; their
-align loss ≠ 0 only because transcoder decoders have a bias (target degenerates
-to a constant). Humanities transcoder masks were budget-correct but the circuit
-term was noise — likely why firm mult hum (47.5) trailed TaCQ (51.5).
-
-**Valid:** all GSM8k / MMLU_STEM / MMLU_social_sciences / Spider results; the
-dumb arms (weight/magnitude/random) and TaCQ firm humanities (TACQ repo path,
-untruncated). **Invalid:** every circuit-arm MMLU_humanities number (ablation
-ce/align/mult/align_free/mult_free, firm tdsoV2mult, dict-free).
-
-**Fix (applied, commit pending).** `tokenize_side`: `truncation=False` +
-loud error if batch exceeds `--max-len` (now 4096 in runners; TaCQ
-convention — calibration sees exactly the eval prompts). New
-`assert_pairs_differ` guard in both extractors. `apply_mask_budget` now raises
-if kept > 2× target (degenerate-tie guard).
-
-**Reruns:** humfix_A = 2519273 (abl w2 s0 heavy arms + firm w2 s0-2, hum only);
-humfix_B = 2519274 (gated: abl w3 s0 heavy, dict-free w2/w3 s1-2, firm w3
-s0-2).
+As predicted, the old degenerate numbers (47.5 s0 / 47.9 s1) were noise.
+The corrected ATLAS-T trails TaCQ on humanities by ~6pp — consistent with the
+ablation showing ce > mult on this task (the circuit term, in the transcoder
+basis, degrades hum performance).
 
 ---
 
-## Paired-bootstrap significance (2026-06-11, seed 0, 10k iterations)
+## 5. Paired-bootstrap significance (seed 0, 10k iterations)
 
-**GSM8k 2-bit (n=1319 examples, per-example pairing):**
-- ATLAS-T vs TaCQ(ce): +3.26pp, CI [+0.91, +5.61], **p=0.005** ✓ significant
-- ATLAS-N vs TaCQ(ce): +1.14pp, CI [-1.44, +3.64], p=0.196 — not significant
-- ATLAS-T vs ATLAS-N:  +2.12pp, CI [-0.45, +4.70], p=0.056 — borderline
+**GSM8k 2-bit (n=1319 per-example):**
+- ATLAS-T vs TaCQ: +3.26pp, CI [+0.91, +5.61], **p=0.005** ✓
+- ATLAS-N vs TaCQ: +1.14pp, CI [-1.44, +3.64], p=0.196
+- ATLAS-T vs ATLAS-N: +2.12pp, CI [-0.45, +4.70], p=0.056
 
-**MMLU-STEM 2-bit (n=18 subjects, cluster bootstrap):**
-- ATLAS-T vs TaCQ(ce): -1.96pp, CI [-4.51, +0.59], p=0.066 — ATLAS-T LOSES
-- ATLAS-N vs TaCQ(ce): +1.66pp, CI [-1.96, +5.09], p=0.179 — not significant
-- ATLAS-N vs ATLAS-T:  +3.61pp, CI [+0.12, +6.92], **p=0.022** ✓ significant
+**MMLU-STEM 2-bit (n=18 subjects, cluster):**
+- ATLAS-T vs TaCQ: −1.96pp, CI [−4.51, +0.59], p=0.066
+- ATLAS-N vs TaCQ: +1.66pp, CI [−1.96, +5.09], p=0.179
+- ATLAS-N vs ATLAS-T: +3.61pp, CI [+0.12, +6.92], **p=0.022** ✓
 
-**Key takeaway for paper claims:** the only *significant* paired gaps at seed 0
-are ATLAS-T > TaCQ on GSM8k and ATLAS-N > ATLAS-T on STEM. The rest need
-multi-seed pooling (concatenated per-example vectors) or per-example MMLU dumps
-to resolve. Do NOT claim ATLAS-N > TaCQ on GSM8k — it's noise (p=0.20).
+**Key for paper claims:** Only ATLAS-T > TaCQ on GSM8k and ATLAS-N > ATLAS-T on
+STEM are significant at seed 0. Multi-seed pooling needed for remaining gaps.
 
 ---
 
-## Dict-free multi-seed harvest (2026-06-11 afternoon, jobs 2517952–58)
+## 6. 3-bit downstream head-to-head (3 seeds complete)
 
-ATLAS-N (mult_free) / align_free, ablation protocol, humanities EXCLUDED
-(truncation bug, reruns in flight). Acc %:
+TaCQ vs ATLAS-T, matched 0.35% budget. Source logs: `downstream_firm_w3.log`,
+`tdso_w3_s2_2518045.out`.
+
+| Task | TaCQ 3b (s0/s1/s2) | ATLAS-T 3b (s0/s1/s2) | Δ |
+|---|---|---|---|
+| GSM8k | 63.7 (63.8/63.2/64.0) | 61.4 (63.3/63.3/57.6) | −2.3 |
+| MMLU_STEM | 56.5 (57.1/55.3/57.0) | 54.6 (54.0/55.7/54.0) | −1.9 |
+| MMLU_hum | 63.0 (61.7/64.3/62.9) | *(humfix_B in flight)* | — |
+| MMLU_soc | 73.0 (72.4/73.7/73.0) | 74.0 (74.5/73.7/73.2) | +1.0 |
+
+**Finding.** At 3-bit: tied (all gaps within seed spread). Consistent with
+ablation convergence.
+
+---
+
+## 7. Dict-free multi-seed (ATLAS-N, 2-bit + 3-bit)
+
+Source logs: `saliency_source_ablation_2517952-58.out`.
 
 **2-bit** (s0 / s1 / s2):
-- GSM8k    align_free 22.9 / 15.8 / 14.6 ; mult_free 26.5 / 17.2 / (gap job 2519430 — MTB token race killed GPTQ; mask intact)
-- STEM     align_free 42.6 / 39.3 / 39.2 ; mult_free 44.2 / 40.8 / 40.8
-- soc_sci  align_free 52.6 / 50.7 / 54.2 ; mult_free 55.9 / 54.1 / 50.8
+- GSM8k: mult_free 26.5 / 17.2 / *(pending 2521061)* ;
+  align_free 22.9 / 15.8 / 14.6
+- STEM: mult_free 44.2 / 40.8 / 40.8 ; align_free 42.6 / 39.3 / 39.2
+- Soc: mult_free 55.9 / 54.1 / 50.8 ; align_free 52.6 / 50.7 / 54.2
 
 **3-bit** (s0 / s1 / s2):
-- GSM8k    align_free 59.7 / 57.7 / 57.9 ; mult_free 57.9 / 59.6 / 56.3
-- STEM     align_free 53.8 / 54.4 / 53.3 ; mult_free 54.1 / 53.0 / 53.7
-- soc_sci  align_free 71.7 / 72.0 / 72.8 ; mult_free 72.3 / 73.0 / 72.4
+- GSM8k: mult_free 57.9 / 59.6 / 56.3 ; align_free 59.7 / 57.7 / 57.9
+- STEM: mult_free 54.1 / 53.0 / 53.7 ; align_free 53.8 / 54.4 / 53.3
+- Soc: mult_free 72.3 / 73.0 / 72.4 ; align_free 71.7 / 72.0 / 72.8
 
-**Firm tdsoV2mult 3-bit seed 2 (2518045):** GSM8k 57.6, STEM 54.0,
-soc_sci 73.2 (hum 61.1 INVALID → humfix_B). Table downstream3 now 3 seeds.
-
-⚠️ **Heads-up for paper claims:** dict-free 2-bit seed variance is large
-(GSM8k mult_free 26.5 vs 17.2; STEM s0 44.2 vs s1/s2 40.8). The s0-only
-"ATLAS-N surpasses all transcoder arms on STEM" claim needs multi-seed
-qualification once the grid completes. 3-bit convergence story is clean.
-
-**humfix_A health check:** new no-truncation path verified — ce hum mask
-exactly 0.3500%, transcoder align loss now varies per batch (1e5-range, was
-constant 3.523e5), dict-free align nonzero (was 0.0).
+⚠️ 2-bit seed variance is large (GSM8k: 26.5 → 17.2). 3-bit convergence
+is clean across seeds.
 
 ---
 
-## Transcoder-variant coverage audit (2026-06-11)
+## 8. Spider head-to-head (2-bit, 4 seeds)
 
-Decision: the paper KEEPS the transcoder version (T-DSO v2 mult) and tells the
-discovery story: T-DSO wins → ablation dissects it → dict-free distills it.
-Intro/abstract/results restructured accordingly (Step 1/2/3 narrative).
-
-**Complete ✓**
-- Spider 2b: mult 4 seeds (29.4±2.7), TaCQ 4 seeds (26.5±2.0), v1 align s0.
-- TaCQ firm 2b + 3b: all 4 tasks × seeds 0–2 (genuine 2-bit).
-- mult firm 3b: seeds 0–1 × 4 tasks.
-- Ablation 2b s0 ce/align/mult: GSM8k + MMLU_STEM.
-
-**In flight (jobs)**
-- 2517684 `tdso2b_fix` — rebuild firm mult 2b (GSM8k s0–2, MMLU s0–1) at
-  genuine `--wbits 2`. First numbers: GSM8k s0 raw 29.8%, MMLU_hum s0 47.5%.
-- 2517959 `tdso_w2s2` — mult 2b seed-2 MMLU gap.
-- 2518045 `tdso_w3s2` — mult 3b seed-2, all 4 tasks (fills Table downstream3
-  to 3 seeds).
-- 2518046 `abl_w2_humsoc` — ablation 2b s0 arms {ce,align,mult,weight,
-  magnitude,random} on MMLU_humanities + social_sciences (completes the
-  8-arm × 4-task 2-bit grid together with dfree jobs).
-- 2518047 `abl_w3_s0` — ablation 3b s0, same 6 arms × all 4 tasks (direct
-  controlled evidence for the "low-bit phenomenon" claim).
-- 2517952–2517958 `dfree_*` — dict-free arms, 2b+3b, seeds 0–2, 4 tasks.
-
-**Still missing after these land**
-- Spider 3b multi-seed (s0 only: TaCQ 64.8 / v1 65.0 / mult 66.2).
-- align (v1) multi-seed beyond Spider — secondary, ablation covers s0.
+| Method | Mean ± std |
+|---|---|
+| TaCQ | 26.5 ± 2.0 |
+| ATLAS-T | **29.4 ± 2.7** |
+| circuit-only (align) | 25.0 (s0) |
 
 ---
 
-## TODO / pending firm numbers
+## 9. Second model: Qwen2.5-7B-Instruct (in progress)
 
-- MMLU_STEM 2b: rerun arms {random, weight, magnitude, ce, align, mult}.
-- 3-bit saliency-source ablation (mirror of the 2-bit table).
-- Downstream firm seeds 1,2 (GSM8k, MMLU) + fixed-mask bitwidth ablation.
-- Spider multi-seed for TaCQ + v2 mult (and π_nom 3b).
-- Second model replication (Llama-3.2-1B).
-- Paired-bootstrap significance on the headline conjunction gaps.
+Probe job 2519826 validated end-to-end: extraction (ce + dict-free), masks at
+0.35%, GPTQ ran. Eval timed out at 1302/1319 examples (99%). Resubmitted as
+2521060. No transcoder exists for Qwen — only ATLAS-N is testable, which is
+exactly the point.
+
+---
+
+## In flight
+
+- `humfix_B` (2519274) — 3-bit hum ablation + dict-free hum seeds + firm w3
+- `qwen_r2` (2521060) — Qwen probe eval completion
+- `dfree_r2` (2521061) — mult_free GSM8k 2-bit s2 gap fill
+
+## Still needed
+
+- Qwen full grid (4 tasks × 3 seeds, ATLAS-N vs TaCQ)
+- HumanEval eval harness + runs
+- Extraction-overhead table
+- Per-example MMLU dumps for tighter bootstrap

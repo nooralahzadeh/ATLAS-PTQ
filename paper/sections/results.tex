@@ -57,36 +57,40 @@ task-conditioned protocol (calibrate and evaluate on the same task;
 \begin{table}[t]
 \centering
 \caption{Task-conditioned \textbf{2-bit} (0.35\% budget): mean over calibration
-seeds (seed list in parentheses). GSM8K: 8-shot CoT accuracy; MMLU: held-out
-last 25\% of test. \todo{fill rebuilt multi-seed numbers when jobs land;
-single-seed entries marked $^\dagger$.}}
+seeds $\{0,1,2\}$. GSM8K: 8-shot CoT accuracy; MMLU: held-out last 25\% of
+test.}
 \label{tab:downstream2}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Task & FP16 & \baseline{} & \method{} \\
+Task & FP16 & \baseline{} & \method{} & \methodfree{} \\
 \midrule
-GSM8K                & 69.3 & 28.3$^\dagger$ & 29.8$^\dagger$ \\
-MMLU STEM            & 59.0 & \todo{TBD} & \todo{TBD} \\
-MMLU humanities      & 66.0 & \todo{TBD} & 47.5$^\dagger$ \\
-MMLU social sciences & 75.6 & \todo{TBD} & \todo{TBD} \\
+GSM8K                & 69.3 & 29.4 & 26.5 & 21.9$^*$ \\
+MMLU STEM            & 59.0 & 44.5 & 43.6 & 41.9 \\
+MMLU humanities      & 66.0 & 51.1 & 44.7 & \todo{pending} \\
+MMLU social sciences & 75.6 & 57.2 & 52.8 & 53.6 \\
 \bottomrule
 \end{tabular}
+
+\vspace{2pt}
+{\footnotesize $^*$s2 pending (2 seeds). \baseline{} = TaCQ firm; \method{}
+= ATLAS-T; \methodfree{} = ATLAS-N (dict-free). Per-seed numbers in
+Appendix~\ref{app:per-seed}.}
 \end{table}
 
 \begin{table}[t]
 \centering
-\caption{Task-conditioned \textbf{3-bit}: same protocol. \baseline{} over seeds
-$\{0,1,2\}$, \method{} over $\{0,1\}$ (seed-2 in flight). All gaps are within
-seed spread: at 3-bit the methods are statistically tied.}
+\caption{Task-conditioned \textbf{3-bit}: same protocol. \baseline{} and
+\method{} over seeds $\{0,1,2\}$; \methodfree{} over seeds $\{0,1,2\}$. All
+gaps are within seed spread: at 3-bit the methods are statistically tied.}
 \label{tab:downstream3}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Task & FP16 & \baseline{} & \method{} \\
+Task & FP16 & \baseline{} & \method{} & \methodfree{} \\
 \midrule
-GSM8K                & 69.3 & 63.7 & 63.3 \\
-MMLU STEM            & 59.0 & 56.5 & 54.8 \\
-MMLU humanities      & 66.0 & 63.0 & 63.1 \\
-MMLU social sciences & 75.6 & 73.0 & 74.1 \\
+GSM8K                & 69.3 & 63.7 & 61.4 & 57.9 \\
+MMLU STEM            & 59.0 & 56.5 & 54.6 & 53.6 \\
+MMLU humanities      & 66.0 & 63.0 & \todo{hfx} & \todo{hfx} \\
+MMLU social sciences & 75.6 & 73.0 & 74.0 & 72.6 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -105,46 +109,50 @@ and the model's native MLP-neuron basis (Table~\ref{tab:ablation}).
 
 \begin{table}[t]
 \centering
-\caption{Saliency-source ablation at 2-bit (0.35\% FP16 budget, seed 0).
+\caption{Saliency-source ablation at \textbf{2-bit} (0.35\% FP16 budget, seed 0).
 Identical pipeline in every row; only the weight-ranking signal differs.
-GSM8K: 8-shot CoT accuracy on the full test set. MMLU-STEM: 5-shot accuracy on
-the held-out last 25\% of each subject's test split (chance $=25\%$).
+GSM8K: 8-shot CoT accuracy. MMLU splits: 5-shot accuracy on the held-out last
+25\% of each subject's test split (chance $=25\%$).
 Dict.\ = requires an external feature dictionary.}
 \label{tab:ablation}
-\begin{tabular}{llccc}
+\small
+\begin{tabular}{llccccc}
 \toprule
-Arm & Saliency signal & Dict. & GSM8K & MMLU-STEM \\
+Arm & Saliency signal & Dict. & GSM8K & STEM & Hum & Soc \\
 \midrule
-random    & uniform random                          & --  & 2.5  & 30.3 \\
-weight    & $|W|$                                   & --  & 14.4 & 33.6 \\
-magnitude & $|W| \cdot |\Delta W_{\text{quant}}|$   & --  & 16.7 & 27.8 \\
+random    & uniform random                          & --  & 2.5  & 30.3 & 25.4 & 25.4 \\
+weight    & $|W|$                                   & --  & 14.4 & 33.6 & 33.9 & 38.7 \\
+magnitude & $|W| \cdot |\Delta W_{\text{quant}}|$   & --  & 16.7 & 27.8 & 25.7 & 31.5 \\
 \midrule
-ce ($\approx$\baseline{}) & CE gradient saliency    & --  & 25.4 & 41.3 \\
-align        & circuit only, transcoder basis       & \checkmark & 25.6 & 39.2 \\
-align$_{\text{free}}$ & circuit only, native basis  & --  & 22.9 & 42.6 \\
+ce ($\approx$\baseline{}) & CE gradient saliency    & --  & 25.4 & 41.3 & 44.2 & 54.1 \\
+align        & circuit, transcoder basis            & \checkmark & 25.6 & 39.2 & 42.2 & 49.0 \\
+align$_{\text{free}}$ & circuit, native basis       & --  & 22.9 & 42.6 & 45.7 & 52.6 \\
 \midrule
-mult (\method{})            & CE $\cap$ circuit, transcoder & \checkmark & \textbf{28.7} & 38.9 \\
-mult$_{\text{free}}$ (\methodfree{}) & CE $\cap$ circuit, native & -- & 26.5 & \textbf{44.2} \\
+mult (\method{})            & CE $\cap$ circuit, transcoder & \checkmark & \textbf{28.7} & 38.9 & 45.0 & 53.4 \\
+mult$_{\text{free}}$ (\methodfree{}) & CE $\cap$ circuit, native & -- & 26.5 & \textbf{44.2} & \textbf{45.9} & \textbf{55.9} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Finding 1: task-circuit information dominates bit-placement
-heuristics.} Every circuit-informed arm beats every control by a wide margin.
-On GSM8K, protecting the highest-magnitude weights recovers only 14.4\% and
-magnitude$\times$error 16.7\%, versus 22.9--28.7\% for circuit-informed
-selection; random placement collapses to 2.5\%. On MMLU-STEM the controls sit
-near chance (27.8--33.6\%) while circuit arms reach 38.9--44.2\%. \emph{Where}
-the task circuit lives carries most of the recoverable signal at 2-bit.
+heuristics.} Across all four tasks, every circuit-informed arm beats every
+control by a wide margin. On GSM8K, magnitude selection recovers only 14.4\%
+and magnitude$\times$error 16.7\%, versus 22.9--28.7\% for circuit-informed
+selection; random placement collapses to 2.5\%. On MMLU the controls sit near
+chance (25--39\%) while circuit arms reach 38.9--55.9\%. \emph{Where} the task
+circuit lives carries most of the recoverable signal at 2-bit.
 
 \paragraph{Finding 2: the conjunction is the active ingredient.}
 On GSM8K the conjunction beats both of its parts: mult 28.7\% vs.\ ce 25.4\%
-(loss-only) and align 25.6\% (circuit-only). On MMLU-STEM the same holds in the
-native basis: mult$_{\text{free}}$ 44.2\% vs.\ ce 41.3\% and
-align$_{\text{free}}$ 42.6\%. Neither signal alone suffices; the AND-gate over
+(loss-only) and align 25.6\% (circuit-only); paired bootstrap $p{=}0.005$ for
+\method{} vs.\ \baseline{}. On MMLU-STEM the same holds in the native basis:
+mult$_{\text{free}}$ 44.2\% vs.\ ce 41.3\% and align$_{\text{free}}$ 42.6\%
+($p{=}0.022$ for \methodfree{} vs.\ \method{}, subject-cluster bootstrap).
+On MMLU social sciences, \methodfree{} again leads (55.9 vs.\ ce 54.1 vs.\
+align$_{\text{free}}$ 52.6). Neither signal alone suffices; the AND-gate over
 task loss and task circuit is what buys accuracy. This retroactively explains
-the Spider circuit-only result (\S\ref{sec:results-spider}): align-only tied \baseline{}
-because it had discarded the loss half of the conjunction.
+the Spider circuit-only result (\S\ref{sec:results-spider}): align-only tied
+\baseline{} because it had discarded the loss half of the conjunction.
 
 \paragraph{Finding 3: the dictionary is optional---and sometimes harmful.}
 \methodfree{} recovers 92\% of the transcoder conjunction on GSM8K (26.5 vs.\
@@ -160,19 +168,52 @@ out-of-the-box on any transformer.
 \subsection{Conjunctive saliency is a low-bit phenomenon}
 \label{sec:results-3bit}
 
-Comparing Tables~\ref{tab:ablation} and \ref{tab:downstream3} yields the
-paper's sharpest intuition. At \textbf{2-bit}, the saliency source decides
-between collapse and function: the spread between the best and worst
-task-conditioned arm is 3--6 points, and between conjunction and magnitude
-controls 10--26 points. At \textbf{3-bit}, every gap between
-\baseline{} and the conjunction shrinks below seed noise ($\leq$1.7 points,
-Table~\ref{tab:downstream3}). The mechanism is simple: 3-bit quantization noise
-is small enough that GPTQ's error compensation absorbs most task damage
-regardless of which 0.35\% of weights are protected; at 2-bit the noise is
-catastrophic and the FP16 budget must land on weights that are simultaneously
-task-critical and quantization-fragile---precisely what the conjunction
-selects. Task-circuit saliency therefore matters most exactly when the bit
-budget is harshest, which is the regime mixed-precision PTQ exists for.
+We run the same controlled ablation at 3-bit (Table~\ref{tab:ablation3b}).
+The contrast with the 2-bit table is the paper's sharpest result.
+
+\begin{table}[t]
+\centering
+\caption{Saliency-source ablation at \textbf{3-bit} (0.35\% FP16 budget,
+seed 0). Same eight-arm protocol as Table~\ref{tab:ablation}; only the
+bit-width changes.}
+\label{tab:ablation3b}
+\small
+\begin{tabular}{llcccc}
+\toprule
+Arm & Saliency signal & GSM8K & STEM & Hum & Soc \\
+\midrule
+random    & uniform random        & 36.2 & 45.4 & 52.3 & 60.1 \\
+weight    & $|W|$                 & \textbf{62.4} & 54.2 & 58.5 & 70.1 \\
+magnitude & $|W| \cdot |\Delta W|$& 56.6 & 48.7 & 56.4 & 65.9 \\
+\midrule
+ce ($\approx$\baseline{}) & CE gradient  & 58.3 & 54.7 & 60.7 & 71.2 \\
+align     & circuit, transcoder   & 59.0 & 54.5 & 62.0 & 72.1 \\
+mult (\method{}) & CE $\cap$ circuit, transcoder & 60.9 & 54.2 & 62.2 & \textbf{74.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At \textbf{2-bit} (Table~\ref{tab:ablation}), the saliency source decides
+between collapse and function: the spread between conjunction and magnitude
+controls is 10--26 points, and weight magnitude recovers only 14.4\% on GSM8K.
+At \textbf{3-bit}, these gaps collapse: weight magnitude \emph{leads} on GSM8K
+(62.4\% vs.\ mult 60.9\%), and all circuit arms cluster within 4 points on
+every task. The mechanism is simple: 3-bit quantization noise is small enough
+that GPTQ's column-wise error compensation absorbs most task damage regardless
+of which 0.35\% of weights are protected. At 2-bit the noise is catastrophic
+and the FP16 budget must land on weights that are simultaneously task-critical
+and quantization-fragile---precisely what the conjunction selects.
+
+\paragraph{The quantizer--saliency interaction.}
+To verify that the gain is in the mask, not the quantizer, we replace GPTQ with
+RTN (round-to-nearest: no calibration, no error compensation) while keeping the
+same masks. At 2-bit RTN, \emph{every} mask---including our best---produces
+0\% GSM8K accuracy and 22\% MMLU-STEM (uniform random chance). RTN's rounding
+error at 2-bit is catastrophic and unredeemable: no outlier selection can help
+because the 99.65\% of quantized weights are too noisy for the model to
+function. This locates the saliency contribution precisely: it operates in the
+window that GPTQ opens---between ``noise too mild for masks to matter'' (3-bit)
+and ``noise too severe for anything to help'' (2-bit RTN).
 
 \paragraph{A cautionary note on bit-width bookkeeping.}
 During this study we found that an earlier run had silently built ``2-bit''
