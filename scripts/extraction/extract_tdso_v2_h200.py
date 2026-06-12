@@ -82,7 +82,18 @@ def load_pairs(paths, max_pairs=None):
     return pairs
 
 
-def tokenize_side(tokenizer, texts, max_len, device):
+def tokenize_side(tokenizer, texts, max_len, device, raw_text=False):
+    if raw_text:
+        # TaCQ parity: tokenize the raw prompt directly (BOS added by tokenizer),
+        # no chat template. measure_importances.py does exactly this.
+        enc = tokenizer(texts, return_tensors="pt", padding="longest", truncation=False)
+        n_tok = enc["input_ids"].shape[1]
+        if n_tok > max_len:
+            raise ValueError(
+                f"batch is {n_tok} tokens > max_len={max_len}; refusing to truncate. "
+                f"Raise --max-len."
+            )
+        return {k: v.to(device) for k, v in enc.items()}
     rendered = [
         tokenizer.apply_chat_template(_record_to_messages(t), tokenize=False, add_generation_prompt=True)
         for t in texts
@@ -159,7 +170,8 @@ class TDSOController:
                 with torch.no_grad():
                     y_target = tc.decode(filtered)
                 y_target = y_target.detach()
-                contrib = -(output * y_target)
+                # fp32 contrib: token-sum overflows fp16 when model runs in float16.
+                contrib = -(output.float() * y_target.float())
                 contrib = contrib * self.mask.unsqueeze(-1).to(contrib.dtype)
                 layer_loss = contrib.sum()
                 self.loss = layer_loss if self.loss is None else self.loss + layer_loss
@@ -204,8 +216,14 @@ def parse_args():
     ap.add_argument("--mask-budget", default="global", choices=["global", "layer_adaptive"],
                     help="global=single top-k (TaCQ-style); layer_adaptive=0.35%% split by transcoder feature density.")
     ap.add_argument("--quantile", type=float, default=0.95)
-    ap.add_argument("--combine", default="boost", choices=["ce", "align", "boost", "add", "mult"])
+    ap.add_argument("--combine", default="boost",
+                    choices=["ce", "align", "boost", "add", "mult", "boost_rank"])
     ap.add_argument("--lam", type=float, default=1, help="weight of the align term")
+    ap.add_argument("--model-dtype", default="bfloat16",
+                    choices=["bfloat16", "float16", "float32"],
+                    help="float16 matches TaCQ's sm16bit selector (firm baseline runs)")
+    ap.add_argument("--raw-text", action="store_true",
+                    help="TaCQ parity: tokenize raw prompt text, no chat template")
     ap.add_argument("--batch-size", type=int, default=4)
     ap.add_argument("--max-len", type=int, default=512)
     ap.add_argument("--max-pairs", type=int, default=None)
@@ -223,7 +241,8 @@ def main():
     for p in args.pairs:
         assert_calib_pairs_path(p, allow_legacy_eval=args.allow_legacy_eval_pairs)
     device = torch.device("cuda")
-    dtype = torch.bfloat16
+    dtype = {"bfloat16": torch.bfloat16, "float16": torch.float16,
+             "float32": torch.float32}[args.model_dtype]
     need_ce = args.combine != "align"
     need_align = args.combine != "ce"
     print(f"[cfg] model={args.model} combine={args.combine} lam={args.lam} bits={args.bits} "
@@ -272,9 +291,9 @@ def main():
     n_batches = (len(pairs) + args.batch_size - 1) // args.batch_size
     for bi in range(n_batches):
         batch = pairs[bi * args.batch_size:(bi + 1) * args.batch_size]
-        clean = tokenize_side(tokenizer, [r["clean"] for r in batch], args.max_len, device)
+        clean = tokenize_side(tokenizer, [r["clean"] for r in batch], args.max_len, device, raw_text=args.raw_text)
         if need_align:
-            corr = tokenize_side(tokenizer, [r["corrupted"] for r in batch], args.max_len, device)
+            corr = tokenize_side(tokenizer, [r["corrupted"] for r in batch], args.max_len, device, raw_text=args.raw_text)
             assert_pairs_differ(clean, corr, context=f" (batch {bi})")
             ctrl.phase = "corr"
             ctrl.corr_summ = {}
@@ -289,6 +308,11 @@ def main():
         out = model(input_ids=clean["input_ids"], attention_mask=clean["attention_mask"],
                     labels=labels if need_ce else None)
         if need_align:
+            if not torch.isfinite(ctrl.loss):
+                raise RuntimeError(
+                    f"align loss non-finite ({float(ctrl.loss)}) at batch {bi}: "
+                    "fp16 overflow or degenerate pair. Aborting before wasting GPU."
+                )
             model.zero_grad(set_to_none=True)
             ctrl.loss.backward(retain_graph=need_ce)
             with torch.no_grad():
@@ -323,11 +347,25 @@ def main():
     mean_al = max(mean_al, 1e-20)
     print(f"[norm] mean_ce={mean_ce:.3e} mean_align={mean_al:.3e}", flush=True)
 
+    def rank_pct(t):
+        """Per-tensor percentile rank in [0, 1]; scale-free circuit signal."""
+        flat = t.flatten()
+        idx = torch.argsort(flat)
+        ranks = torch.empty_like(flat, dtype=torch.float32)
+        ranks[idx] = torch.arange(flat.numel(), device=flat.device, dtype=torch.float32)
+        return (ranks / max(flat.numel() - 1, 1)).view_as(t)
+
     def combine(gc, ga):
         if args.combine == "ce":
             return gc
         if args.combine == "align":
             return ga
+        if args.combine == "boost_rank":
+            # Boost-only conjunction: never demotes a weight below its CE rank
+            # (lam=0 recovers exact TaCQ ordering). Rank-normalizing the circuit
+            # signal makes the boost invariant to its scale, which varies wildly
+            # across tasks/seeds.
+            return gc * (1.0 + args.lam * rank_pct(ga))
         gch = gc / mean_ce
         gah = ga / mean_al
         if args.combine == "boost":
